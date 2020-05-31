@@ -10,14 +10,11 @@
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Npgsql" Version="4.0.10" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="config.json.template">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  
+  <ItemGroup> 
+    <Content Include="../Docker/**"> 
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
+    </Content> 
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using CHEF.Components;
 using Discord;
 using Discord.WebSocket;
@@ -14,7 +15,6 @@ namespace CHEF
 
         private async Task MainAsync()
         {
-            Config.Init();
             Database.Init();
 
             await SetupBotLogin();
@@ -30,7 +30,7 @@ namespace CHEF
             _client = new DiscordSocketClient(config);
             _client.Log += Log;
 
-            await _client.LoginAsync(TokenType.Bot, Config.Get<string>("DISCORD_TOKEN"));
+            await _client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("DISCORD_TOKEN"));
             await _client.StartAsync();
         }
 

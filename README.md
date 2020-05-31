@@ -8,13 +8,13 @@ Clone the repository:
 
 ```bash
 $ git clone --recursive https://github.com/xiaoxiao921/CHEF.git
-$ cd CHEF/CHEF
 ```
 
-Edit `config.json` and insert your Discord token and PostgreSQL credentials:
+Insert your Discord token and PostgreSQL credentials from a fresh .env file.
 
 ```bash
-$ cp config.json.template config.json
+$ cd CHEF/Docker
+$ cp .env.template .env
 ```
 
 ## Building for production (publishing):
@@ -28,10 +28,9 @@ This will put all the necessary dependencies on the same folder as the bot dll a
 
 ### Docker
 
-Once the app published, you can `cd` to that `publish/` folder , build an image from the dockerfile and run it.
+Once the app published, you can `cd` to that `publish/` folder and use the docker-composer file.
 
 ```bash
 $ cd bin/x64/Release/netcoreapp2.1/publish/
-$ docker build -t chefbot -f Dockerfile .
-$ docker run --detach chefbot
+$ docker-compose up
 ```

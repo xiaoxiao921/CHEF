@@ -1,7 +1,0 @@
-{
-  "DISCORD_TOKEN": "<insert discord bot token>",
-  "DB_HOST": "<insert postegresql host name>",
-  "DB_USERNAME": "<insert postegresql username>",
-  "DB_PASSWORD": "<insert postegresql password>",
-  "DB_NAME": "<insert postegresql database name>"
-}

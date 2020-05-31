@@ -7,15 +7,16 @@ namespace CHEF
     {
         internal static void Init()
         {
-            /*var host = Config.Get<string>("DB_HOST");
-            var username = Config.Get<string>("DB_USERNAME");
-            var password = Config.Get<string>("DB_PASSWORD");
-            var dbName = Config.Get<string>("DB_NAME");
+            var host = Environment.GetEnvironmentVariable("POSTGRES_HOST");
+            var username = Environment.GetEnvironmentVariable("POSTGRES_USER");
+            var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+            var dbName = Environment.GetEnvironmentVariable("POSTGRES_DB");
 
             var connectionString = $"Host={host};Username={username};Password={password};Database={dbName}";
 
             using (var con = new NpgsqlConnection(connectionString))
             {
+                con.Open();
                 var sql = "SELECT version()";
 
                 using (var cmd = new NpgsqlCommand(sql, con))
@@ -23,7 +24,7 @@ namespace CHEF
                     var version = cmd.ExecuteScalar().ToString();
                     Console.WriteLine($"PostgreSQL version: {version}");
                 }
-            }*/
+            }
         }
     }
 }
