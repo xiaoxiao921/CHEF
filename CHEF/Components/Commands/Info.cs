@@ -21,8 +21,13 @@ namespace CHEF.Components.Commands
             foreach (CommandInfo command in commands)
             {
                 var embedFieldText = command.Summary ?? "No description available\n";
-
-                embedBuilder.AddField(command.Name, embedFieldText);
+                var sb = new StringBuilder();
+                foreach (var alias in command.Aliases)
+                {
+                    sb.Append(alias);
+                    sb.Append(" / ");
+                }
+                embedBuilder.AddField(sb.ToString(), embedFieldText);
             }
 
             await ReplyAsync("Here's a list of commands and their description: ", false, embedBuilder.Build());
@@ -37,10 +42,10 @@ namespace CHEF.Components.Commands
             SocketUser user = null)
         {
             var embedBuilder = new EmbedBuilder();
-            embedBuilder.WithColor(Color.DarkOrange);
+            embedBuilder.WithColor(Color.Orange);
 
-            var _userInfo = user ?? Context.User;
-            var userInfo = (SocketGuildUser)_userInfo;
+            var socketUser = user ?? Context.User;
+            var userInfo = (SocketGuildUser)socketUser;
 
             embedBuilder.WithAuthor(author => author.Build());
             embedBuilder.Author.WithName($"{userInfo.Username}#{userInfo.Discriminator}");
@@ -49,6 +54,7 @@ namespace CHEF.Components.Commands
             embedBuilder.AddField($"{"" + '\u200B'}", $"{userInfo.Mention}");
 
             embedBuilder.AddField("Joined",
+                // ReSharper disable once PossibleInvalidOperationException
                 userInfo.JoinedAt.Value.Date.ToString("dd MMMM yyyy", CultureInfo.InvariantCulture), true);
             embedBuilder.AddField("Registered",
                 userInfo.CreatedAt.Date.ToString("dd MMMM yyyy", CultureInfo.InvariantCulture), true);
