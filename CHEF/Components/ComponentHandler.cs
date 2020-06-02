@@ -19,11 +19,10 @@ namespace CHEF.Components
             {
                 try
                 {
-                    var compInstance = (Component)Activator.CreateInstance(componentType, client);
-
-                    await compInstance.SetupAsync();
-
                     Logger.Log($"Enabling Component: {componentType.Name}");
+
+                    var compInstance = (Component)Activator.CreateInstance(componentType, client);
+                    await compInstance.SetupAsync();
                 }
                 catch (Exception e)
                 {
