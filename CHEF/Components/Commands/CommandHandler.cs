@@ -28,8 +28,7 @@ namespace CHEF.Components.Commands
 
         private static async Task OnCommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
         {
-            // We can tell the user what went wrong
-            if (!string.IsNullOrEmpty(result?.ErrorReason))
+            if (!string.IsNullOrEmpty(result?.ErrorReason) && result.Error != CommandError.UnknownCommand)
             {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
             }
