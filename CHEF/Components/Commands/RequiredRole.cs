@@ -24,4 +24,10 @@ namespace CHEF.Components.Commands
             return Task.FromResult(PreconditionResult.FromError("You must be in a guild to run this command."));
         }
     }
+
+    public static class Roles
+    {
+        public const string ModDeveloper = "mod developer";
+        public const string CoreDeveloper = "core developer";
+    }
 }
