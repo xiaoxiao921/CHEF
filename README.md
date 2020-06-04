@@ -20,6 +20,39 @@ It can also print the names of the recipes (the custom commands) that the users 
 
 The bot was also made with Docker deployment in mind for easy setup on VPS and such.
 
+## Database ORM
+
+The app is made with ORM in mind, to make it easy, EntityFrameworkCore is being used with Npgsql.
+
+To make migrations (and init your database/table the first time), you'll need to either :
+
+- Use the `Add-Migration` command in your Package Manager Console in VS.
+
+- Do it through dotnet ef.
+
+Note that if all you get is an exception about the connectionString, make sure to setup a dummy one like i'm doing in the RecipeContext class when setting-up migrations.
+
+What happens when doing migrations is that the Entity Framework except you to have a local database setup, 
+
+which could not be the case, or could be stored in a docker container, that you don't have access to right now.
+
+If everything goes correctly, this will create the first migration, you'll be able to see the new .cs files in the folder called Migrations.
+
+For applying it in your database, you can do it at runtime like the Cook Component does :
+
+```cs
+using (var context = new RecipeContext())
+{
+    await context.Database.MigrateAsync();
+}
+```
+
+The first time, this will effectively create the database and the table called recipes.
+
+This will also ensure the database is in sync with what you have in code :
+
+If any further changes are made to the table, you should simply do it by editing the fields of your class directly, and then simply creating a new migration.
+
 ## Install Instructions
 
 Clone the repository:
