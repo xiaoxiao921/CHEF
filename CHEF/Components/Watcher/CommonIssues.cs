@@ -27,18 +27,21 @@ namespace CHEF.Components.Watcher
         /// <returns></returns>
         public static async Task<(string, string)> CheckR2APIVersion(string text)
         {
-            text = text.ToLower();
-            if (text.Contains("loading [r2ap"))
+            if (text != null)
             {
-                const string regexFindVer = "loading \\[r2ap[a-z] (.*?)]";
-                var rx = new Regex(regexFindVer,
-                    RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                var match = rx.Match(text);
-                if (match.Groups.Count > 1)
+                text = text.ToLower();
+                if (text.Contains("loading [r2ap"))
                 {
-                    var apiVer = rx.Match(text).Groups[1].ToString();
+                    const string regexFindVer = "loading \\[r2ap[a-z] (.*?)]";
+                    var rx = new Regex(regexFindVer,
+                        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    var match = rx.Match(text);
+                    if (match.Groups.Count > 1)
+                    {
+                        var apiVer = rx.Match(text).Groups[1].ToString();
 
-                    return (await IsLatestR2APIVersion(apiVer), apiVer);
+                        return (await IsLatestR2APIVersion(apiVer), apiVer);
+                    }
                 }
             }
 
