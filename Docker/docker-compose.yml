@@ -24,6 +24,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     depends_on:
       - db
+    security_opt:
+      - seccomp:"./chrome.json"
 
 volumes:
   db-data:

@@ -49,9 +49,25 @@ using (var context = new RecipeContext())
 
 The first time, this will effectively create the database and the table called recipes.
 
-This will also ensure the database is in sync with what you have in code :
+This will also ensure the database is in sync with what you have in code.
 
-If any further changes are made to the table, you should simply do it by editing the fields of your class directly, and then simply creating a new migration.
+If any further changes are made to the table, you should simply do it by editing the fields of your class directly, and then simply create a new migration.
+
+## Image Recognition through Yandex with Puppeteer
+
+The bot requires the chrome browser to be installed to have its Image Recognition feature to be active.
+
+This setup is done through a sh script called `setup_puppeteer.sh`.
+
+This script will :
+
+- Install the required utils, fonts etc.
+
+- Install latest chrome stable version
+
+- Create an user for `Puppeteer`
+
+The `docker-compose.yml` file also requires the `chrome.json` file to launch chrome with the necessary syscalls to work properly.
 
 ## Install Instructions
 
