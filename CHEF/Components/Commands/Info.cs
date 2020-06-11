@@ -1,10 +1,12 @@
 ﻿using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 
 namespace CHEF.Components.Commands
 {
@@ -70,6 +72,64 @@ namespace CHEF.Components.Commands
                 embedBuilder.AddField("Roles", roles);
 
             await ReplyAsync("", false, embedBuilder.Build());
+        }
+
+        [Command("modinfo")]
+        [Summary
+            ("Returns info about a mod that is uploaded on thunderstore.io")]
+        [Alias("mod")]
+        public async Task ModInfo(
+            [Summary("The mod to get info from")]
+            string modName)
+        {
+            var modInfo = await GetModInfo(modName);
+
+            var embedBuilder = new EmbedBuilder();
+            embedBuilder.WithColor(modInfo.IsDeprecated ? Color.Red : Color.Green);
+
+            embedBuilder.WithAuthor(modInfo.Owner);
+            embedBuilder.WithTitle($"{modInfo.Name} v{modInfo.LatestPackage.VersionNumber}");
+            embedBuilder.WithUrl(modInfo.PackageUrl.AbsoluteUri);
+            embedBuilder.WithDescription(modInfo.LatestPackage.Description);
+            embedBuilder.WithThumbnailUrl(modInfo.LatestPackage.Icon.AbsoluteUri);
+
+            if (modInfo.IsDeprecated)
+            {
+                embedBuilder.AddField("DEPRECATED", "This mod is deprecated, it may not work correctly.");
+            }
+
+            embedBuilder.AddField("Rating Score", modInfo.RatingScore, true);
+            embedBuilder.AddField("Total downloads", modInfo.TotalDownloads, true);
+
+            await ReplyAsync("", false, embedBuilder.Build());
+        }
+
+        public static async Task<Package> GetModInfo(string modName)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var page = 1;
+                while (true)
+                {
+                    const string apiUrl = "https://thunderstore.io/api/v2/package/?page=";
+                    var apiPage = $"{apiUrl}{page++}";
+                    var apiResult =
+                        JsonConvert.DeserializeObject<PackageList>(await httpClient.GetStringAsync(apiPage));
+
+                    foreach (var package in apiResult.Results)
+                    {
+                        if (package.Name.ToLower().Contains(modName.ToLower()))
+                        {
+                            return package;
+                        }
+                    }
+
+                    if (apiResult.Next == null)
+                        break;
+                }
+
+                return null;
+            }
         }
     }
 }
