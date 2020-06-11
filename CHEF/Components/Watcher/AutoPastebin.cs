@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Newtonsoft.Json;
@@ -34,16 +35,25 @@ namespace CHEF.Components.Watcher
                 var attachment = msg.Attachments.First();
                 {
                     var fileType = System.IO.Path.GetExtension(attachment.Url);
-                    if (fileType == ".txt" || fileType == ".log" || fileType == ".cs" && attachment.Size < 100000)
+                    if ((fileType == ".txt" || fileType == ".log" || fileType == ".cs") && attachment.Size < 1000000)
                     {
                         var fileContent = await HttpClient.GetStringAsync(attachment.Url);
+                        var botAnswer = new StringBuilder();
+
+                        var (latestVer, textVer) = await CommonIssues.CheckR2APIVersion(fileContent);
+                        if (latestVer != null)
+                        {
+                            botAnswer.AppendLine(
+                                $"{msg.Author.Mention}, looks like you don't have the latest R2API version installed ({textVer} instead of {latestVer}).");
+                        }
 
                         var pasteResult = await PostBin(fileContent);
                         
                         if (pasteResult.IsSuccess)
                         {
-                            return
-                                $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: {pasteResult.FullUrl}";
+                            botAnswer.AppendLine(
+                                $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: {pasteResult.FullUrl}");
+                            return botAnswer.ToString();
                         }
                         else
                         {
