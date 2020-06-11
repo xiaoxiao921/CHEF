@@ -29,5 +29,6 @@ namespace CHEF.Components.Commands
     {
         public const string ModDeveloper = "mod developer";
         public const string CoreDeveloper = "core developer";
+        public const string Moderator = "moderator";
     }
 }
