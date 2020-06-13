@@ -1,12 +1,11 @@
 ﻿using System.Globalization;
 using System.Linq;
-using System.Net.Http;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 
 namespace CHEF.Components.Commands
 {
@@ -82,7 +81,7 @@ namespace CHEF.Components.Commands
             [Summary("The mod to get info from")]
             string modName)
         {
-            var modInfo = await GetModInfo(modName);
+            var modInfo = await Thunderstore.GetModInfo(modName);
 
             var embedBuilder = new EmbedBuilder();
             embedBuilder.WithColor(modInfo.IsDeprecated ? Color.Red : Color.Green);
@@ -104,31 +103,60 @@ namespace CHEF.Components.Commands
             await ReplyAsync("", false, embedBuilder.Build());
         }
 
-        public static async Task<Package> GetModInfo(string modName)
+        [Command("wiki")]
+        [Summary
+            ("Returns info about a mod that is uploaded on thunderstore.io")]
+        public async Task WikiSearch(
+            [Remainder] string search)
         {
-            using (var httpClient = new HttpClient())
+            search = search.Trim();
+            var encoded = WebUtility.UrlEncode(search);
+            var url = $"https://github.com/risk-of-thunder/R2Wiki/search?q={encoded}&type=Wikis";
+
+            using (var page = await HeadlessBrowser.Chromium.NewPageAsync())
             {
-                var page = 1;
-                while (true)
+                await page.GoToAsync(url);
+
+                var wikiResultsParent = await page.QuerySelectorAsync("#wiki_search_results");
+                if (wikiResultsParent != null)
                 {
-                    const string apiUrl = "https://thunderstore.io/api/v2/package/?page=";
-                    var apiPage = $"{apiUrl}{page++}";
-                    var apiResult =
-                        JsonConvert.DeserializeObject<PackageList>(await httpClient.GetStringAsync(apiPage));
+                    var nbOfResultQuery = await page.QuerySelectorAsync(
+                        "div.d-flex.flex-column.flex-md-row.flex-justify-between.border-bottom.pb-3.position-relative h3");
+                    var nbOfResult =
+                        await nbOfResultQuery.EvaluateFunctionAsync<int>(
+                            "el => el.childNodes[0].nodeValue = el.childNodes[0].nodeValue.replace(/\\D/g, '')");
 
-                    foreach (var package in apiResult.Results)
-                    {
-                        if (package.Name.ToLower().Contains(modName.ToLower()))
-                        {
-                            return package;
-                        }
-                    }
+                    var wikiResult = await wikiResultsParent.QuerySelectorAsync(".hx_hit-wiki.py-4.border-top");
 
-                    if (apiResult.Next == null)
-                        break;
+                    const string githubUrl = "https://github.com";
+
+                    var aElement = await wikiResult.QuerySelectorAsync("a");
+                    var resultTitle = await aElement.EvaluateFunctionAsync<string>("el => el.getAttribute('title')");
+                    var resultLink =
+                        githubUrl + await aElement.EvaluateFunctionAsync<string>("el => el.getAttribute('href')");
+
+                    var resultDescQuery = await wikiResult.QuerySelectorAsync("p.mb-1.width-full");
+                    var resultDesc = await resultDescQuery.EvaluateFunctionAsync<string>("el => el.innerText");
+
+                    var lastUpdatedQuery = await wikiResult.QuerySelectorAsync("relative-time");
+                    var lastUpdated = await lastUpdatedQuery.EvaluateFunctionAsync<string>("el => el.innerText");
+
+                    var embedBuilder = new EmbedBuilder();
+                    embedBuilder.WithColor(Color.Orange);
+
+                    embedBuilder.WithAuthor("R2Wiki", "https://avatars1.githubusercontent.com/u/49210367", resultLink);
+                    embedBuilder.WithTitle(resultTitle);
+                    embedBuilder.WithUrl(resultLink);
+                    embedBuilder.WithDescription($"{resultDesc}\n\n*This page was last updated {lastUpdated}*");
+
+                    embedBuilder.AddField($"Other results ({nbOfResult})", $"[Click here to see the other results]({url})");
+
+                    await ReplyAsync("", false, embedBuilder.Build());
                 }
-
-                return null;
+                else
+                {
+                    await ReplyAsync($"No result in the wiki for {search}.");
+                }
             }
         }
     }
