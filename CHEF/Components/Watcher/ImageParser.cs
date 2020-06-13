@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using PuppeteerSharp;
@@ -11,7 +10,6 @@ namespace CHEF.Components.Watcher
 {
     public class ImageParser
     {
-        private static Browser _chromium;
         private readonly string _postUrl;
 
         public ImageParser(string siteUrl = "https://yandex.com/")
@@ -22,11 +20,6 @@ namespace CHEF.Components.Watcher
             }
 
             _postUrl = siteUrl + "images/search?url=";
-        }
-
-        internal static async Task LaunchBrowserAsync()
-        {
-            _chromium = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
         }
 
         internal async Task<string> Try(SocketMessage msg)
@@ -46,31 +39,33 @@ namespace CHEF.Components.Watcher
                         var botAnswer = new StringBuilder();
                         var queryResult = await QueryYandex(attachment.Url);
 
-                        var (latestVer, textVer) = await CommonIssues.CheckR2APIVersion(queryResult.ImageText);
-                        if (latestVer != null)
+                        var outdatedMods = await CommonIssues.CheckModsVersion(queryResult.ImageText);
+                        if (outdatedMods != null)
                         {
                             botAnswer.AppendLine(
-                                $"{msg.Author.Mention}, looks like you don't have the latest R2API version installed ({textVer} instead of {latestVer}).");
-                            return botAnswer.ToString();
+                                $"{msg.Author.Mention}, looks like you don't have the latest version installed of " +
+                                $"the following mod{(outdatedMods.Contains('\n') ? "s" : "")} :" + Environment.NewLine +
+                                outdatedMods);
                         }
 
                         if (queryResult.IsAConsole())
                         {
-                            botAnswer.AppendLine($"{msg.Author.Mention}, looks like you just uploaded a screenshot of a BepinEx console / log file.");
-                            botAnswer.AppendLine(
-                                "Know that most of the time, a full log is way more useful for finding what your problem is.");
+                            botAnswer.AppendLine($"{msg.Author.Mention}, looks like you just uploaded a screenshot of a BepinEx console / log file." +
+                                                 Environment.NewLine + 
+                                                 "Know that most of the time, a full log is way more useful for finding what your problem is.");
                             
                             if (msg.Content.ToLower().Contains("crash"))
                             {
-                                botAnswer.AppendLine("You also mentioned the word `crash` in your message.");
-                                botAnswer.AppendLine("Here is the file path for a log file that could be more useful to us :");
-                                botAnswer.AppendLine(@"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`");
-                                botAnswer.AppendLine("or");
-                                botAnswer.AppendLine(@"`C:\Users\< UserName >\AppData\Local\Temp\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`");
+                                botAnswer.AppendLine("You also mentioned the word `crash` in your message." + Environment.NewLine + 
+                                                     "Here is the file path for a log file that could be more useful to us :" + Environment.NewLine +
+                                                     @"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`" + Environment.NewLine +
+                                                     "or" + Environment.NewLine + 
+                                                     @"`C:\Users\< UserName >\AppData\Local\Temp\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`");
                             }
                             else
                             {
-                                botAnswer.AppendLine("You can find such log file in your `Risk of Rain 2/BepInEx/` folder, the file is called `LogOutput.log`.");
+                                botAnswer.AppendLine("You can find such log file in your `Risk of Rain 2/BepInEx/` folder, " +
+                                                     "the file is called `LogOutput.log`.");
                             }
 
                             botAnswer.AppendLine("Drag the file in this channel so that other users can help you !");
@@ -78,7 +73,8 @@ namespace CHEF.Components.Watcher
                         }
 
                         if (queryResult.IsWindowExplorer() && 
-                            (queryResult.ImageText.Contains("bepin") || queryResult.ImageText.Contains("risk of rain")))
+                            (queryResult.ImageText.Contains("bepin", StringComparison.InvariantCultureIgnoreCase) || 
+                             queryResult.ImageText.Contains("risk of rain", StringComparison.InvariantCultureIgnoreCase)))
                         {
                             var channel = msg.Channel as SocketGuildChannel;
                             var faqChannel = channel.Guild.Channels.FirstOrDefault(guildChannel =>
@@ -88,7 +84,7 @@ namespace CHEF.Components.Watcher
                             if (faqChannel != null)
                             {
                                 botAnswer.AppendLine(
-                                    "If you are struggling installing BepInEx / R2API: " +
+                                    "If you are struggling installing BepInEx / R2API: " + Environment.NewLine + 
                                     $"There is a video and an image at the bottom of the <#{faqChannel}> that explains how to install them properly.");
                             }
                             botAnswer.AppendLine("If the issue is something else, just wait for help.");
@@ -106,7 +102,7 @@ namespace CHEF.Components.Watcher
         {
             var res = new YandexImageQuery();
             
-            using (var page = await _chromium.NewPageAsync())
+            using (var page = await HeadlessBrowser.Chromium.NewPageAsync())
             {
                 await page.GoToAsync($"{_postUrl}{imageUrl}&rpt=imageview");
                 var tagsParent = await page.QuerySelectorAsync(".CbirItem.CbirTags");
@@ -114,12 +110,6 @@ namespace CHEF.Components.Watcher
                 {
                     var tags = await tagsParent.QuerySelectorAllAsync(".Button2-Text");
                     await res.AddTags(tags);
-
-                    Logger.Log("Logging all tags");
-                    foreach (var tag in res._imageTags)
-                    {
-                        Logger.Log("tag : " + tag);
-                    }
                 }
 
                 var ocrParent = await page.QuerySelectorAsync(".CbirItem.CbirOcr");
@@ -128,8 +118,6 @@ namespace CHEF.Components.Watcher
                     await page.WaitForSelectorAsync(".CbirOcr-TextBlock.CbirOcr-TextBlock_level_text");
                     var ocr = await page.QuerySelectorAllAsync(".CbirOcr-TextBlock.CbirOcr-TextBlock_level_text");
                     await res.AddText(ocr);
-
-                    Logger.Log("img txt : " + res.ImageText);
                 }
             }
 
@@ -138,7 +126,7 @@ namespace CHEF.Components.Watcher
 
         public class YandexImageQuery
         {
-            public readonly List<string> _imageTags;
+            private readonly List<string> _imageTags;
             public string ImageText { get; private set; }
 
             public YandexImageQuery()
@@ -163,7 +151,7 @@ namespace CHEF.Components.Watcher
                     sb.Append(" ");
                 }
 
-                ImageText = sb.ToString().ToLower();
+                ImageText = sb.ToString();
             }
 
             public bool ContainTag(string tag) => _imageTags.Any(t => t.Contains(tag));
