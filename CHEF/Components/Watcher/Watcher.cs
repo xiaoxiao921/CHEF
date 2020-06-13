@@ -18,8 +18,6 @@ namespace CHEF.Components.Watcher
         {
             Client.MessageReceived += MsgWatcherAsync;
 
-            await ImageParser.LaunchBrowserAsync();
-
             await Task.CompletedTask;
         }
 
