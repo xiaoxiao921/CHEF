@@ -13,7 +13,7 @@ namespace CHEF.Components.Commands
 
         public CommandHandler(DiscordSocketClient client) : base(client)
         {
-            var config = new CommandServiceConfig();
+            var config = new CommandServiceConfig { DefaultRunMode = RunMode.Async };
             Service = new CommandService(config);
         }
 
