@@ -54,7 +54,7 @@ namespace CHEF.Components.Watcher
                                                  Environment.NewLine + 
                                                  "Know that most of the time, a full log is way more useful for finding what your problem is.");
                             
-                            if (msg.Content.ToLower().Contains("crash"))
+                            if (msg.Content.Contains("crash", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 botAnswer.AppendLine("You also mentioned the word `crash` in your message." + Environment.NewLine + 
                                                      "Here is the file path for a log file that could be more useful to us :" + Environment.NewLine +

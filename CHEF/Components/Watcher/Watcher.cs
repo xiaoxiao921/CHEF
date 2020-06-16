@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Discord.WebSocket;
 
 namespace CHEF.Components.Watcher
@@ -33,7 +34,7 @@ namespace CHEF.Components.Watcher
             if (yandexRes.Length > 1)
                 await msg.Channel.SendMessageAsync(yandexRes);
 
-            if (msg.Content.ToLower().Contains("can i ask"))
+            if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
             {
                 await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
             }

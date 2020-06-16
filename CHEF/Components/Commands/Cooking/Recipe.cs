@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,14 +25,14 @@ namespace CHEF.Components.Commands.Cooking
 
         public async Task<Recipe> GetRecipe(string recipeName) =>
             await Recipes.AsQueryable()
-                .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(recipeName.ToLower()));
+                .FirstOrDefaultAsync(r => r.Name.Equals(recipeName, StringComparison.InvariantCultureIgnoreCase)));
 
         public async Task<List<Recipe>> GetRecipes(string nameFilter = null, int page = 0)
         {
             List<Recipe> recipes;
             if (nameFilter != null)
             {
-                recipes = await Recipes.AsQueryable().Where(r => r.Name.ToLower().Contains(nameFilter.ToLower()))
+                recipes = await Recipes.AsQueryable().Where(r => r.Name.Contains(nameFilter, StringComparison.InvariantCultureIgnoreCase))
                     .ToListAsync();
             }
             else

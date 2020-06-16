@@ -41,7 +41,7 @@ namespace CHEF.Components.Commands.Cooking
             using (var context = new RecipeContext())
             {
                 var recipe = await context.Recipes.AsAsyncEnumerable()
-                    .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(cmdName.ToLower()));
+                    .FirstOrDefaultAsync(r => r.Name.Equals(cmdName, StringComparison.InvariantCultureIgnoreCase));
                 if (recipe != null)
                 {
                     await msg.Channel.SendMessageAsync(
