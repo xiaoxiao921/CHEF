@@ -81,7 +81,7 @@ namespace CHEF.Components.Commands.Cooking
                 }
                 else
                 {
-                    noMatch = $"No recipes with {cmdName} in their name";
+                    noMatch = $"No recipes with {cmdName} in their name ";
                     if (page != 1)
                     {
                         noMatch += $"on page {page}";

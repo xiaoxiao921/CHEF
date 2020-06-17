@@ -53,21 +53,19 @@ This will also ensure the database is in sync with what you have in code.
 
 If any further changes are made to the table, you should simply do it by editing the fields of your class directly, and then simply create a new migration.
 
-## Image Recognition through Yandex with Puppeteer
+## Image Recognition through Yandex and Google Cloud Vision API for OCR
 
-The bot requires the chrome browser to be installed to have its Image Recognition feature to be active.
+The bot requires a Google Cloud Account with the Vision API activated (you will need to have your billing information filled)
 
-This setup is done through a sh script called `setup_puppeteer.sh`.
+You will need to have a `json` file containing your credentials for the service account.
 
-This script will :
+Please check those links for more information on how to setup this :
 
-- Install the required utils, fonts etc.
+https://cloud.google.com/vision/docs/before-you-begin
 
-- Install latest chrome stable version
+https://cloud.google.com/vision/docs/libraries
 
-- Create an user for `Puppeteer`
-
-The `docker-compose.yml` file also requires the `chrome.json` file to launch chrome with the necessary syscalls to work properly.
+Note that when first created, your account should be setup as a free account, the first 1k OCR API requests will be free of charge.
 
 ## Install Instructions
 
@@ -83,6 +81,8 @@ Insert your Discord token and PostgreSQL credentials from a fresh .env file.
 $ cd CHEF/Docker
 $ cp .env.template .env
 ```
+
+Make sure that a file called `ChefBot-ocr.json` also exists in the `Docker` folder.
 
 ## Building for production (publishing):
 

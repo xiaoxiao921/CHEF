@@ -2,10 +2,13 @@
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using HtmlAgilityPack;
 
 namespace CHEF.Components.Commands
 {
@@ -113,50 +116,51 @@ namespace CHEF.Components.Commands
             var encoded = WebUtility.UrlEncode(search);
             var url = $"https://github.com/risk-of-thunder/R2Wiki/search?q={encoded}&type=Wikis";
 
-            using (var page = await HeadlessBrowser.Chromium.NewPageAsync())
+            var web = new HtmlWeb();
+            var document = (await web.LoadFromWebAsync(url)).DocumentNode;
+            
+            var wikiResultsParent = document.SelectSingleNode("//div[@id=\"wiki_search_results\"]");
+            if (wikiResultsParent != null)
             {
-                await page.GoToAsync(url);
+                var nbOfResultQuery =
+                    document.SelectSingleNode(
+                        "//div[@class=\"d-flex flex-column flex-md-row flex-justify-between border-bottom pb-3 position-relative\"]/h3");
+                var nbOfResult = Regex.Replace(
+                    nbOfResultQuery.FirstChild.GetDirectInnerText(), @"[^\d]", "", 
+                    RegexOptions.Compiled);
 
-                var wikiResultsParent = await page.QuerySelectorAsync("#wiki_search_results");
-                if (wikiResultsParent != null)
-                {
-                    var nbOfResultQuery = await page.QuerySelectorAsync(
-                        "div.d-flex.flex-column.flex-md-row.flex-justify-between.border-bottom.pb-3.position-relative h3");
-                    var nbOfResult =
-                        await nbOfResultQuery.EvaluateFunctionAsync<int>(
-                            "el => el.childNodes[0].nodeValue = el.childNodes[0].nodeValue.replace(/\\D/g, '')");
+                var wikiResult =
+                    document.SelectSingleNode(
+                        "//div[@class=\"hx_hit-wiki py-4 border-top\"]");
 
-                    var wikiResult = await wikiResultsParent.QuerySelectorAsync(".hx_hit-wiki.py-4.border-top");
+                const string githubUrl = "https://github.com";
 
-                    const string githubUrl = "https://github.com";
+                var aElement = wikiResult.SelectSingleNode("./div[1]/a");
+                var resultTitle = HttpUtility.HtmlDecode(aElement.GetAttributeValue("title", ""));
+                var resultLink =
+                    githubUrl + HttpUtility.HtmlDecode(aElement.GetAttributeValue("href", ""));
 
-                    var aElement = await wikiResult.QuerySelectorAsync("a");
-                    var resultTitle = await aElement.EvaluateFunctionAsync<string>("el => el.getAttribute('title')");
-                    var resultLink =
-                        githubUrl + await aElement.EvaluateFunctionAsync<string>("el => el.getAttribute('href')");
+                var resultDescQuery = wikiResult.SelectSingleNode("./p[1]");
+                var resultDesc = HttpUtility.HtmlDecode(resultDescQuery.GetDirectInnerText());
 
-                    var resultDescQuery = await wikiResult.QuerySelectorAsync("p.mb-1.width-full");
-                    var resultDesc = await resultDescQuery.EvaluateFunctionAsync<string>("el => el.innerText");
+                var lastUpdatedQuery = wikiResult.SelectSingleNode("./div[2]/relative-time");
+                var lastUpdated = lastUpdatedQuery.GetDirectInnerText();
 
-                    var lastUpdatedQuery = await wikiResult.QuerySelectorAsync("relative-time");
-                    var lastUpdated = await lastUpdatedQuery.EvaluateFunctionAsync<string>("el => el.innerText");
+                var embedBuilder = new EmbedBuilder();
+                embedBuilder.WithColor(Color.Orange);
 
-                    var embedBuilder = new EmbedBuilder();
-                    embedBuilder.WithColor(Color.Orange);
+                embedBuilder.WithAuthor("R2Wiki", "https://avatars1.githubusercontent.com/u/49210367", resultLink);
+                embedBuilder.WithTitle(resultTitle);
+                embedBuilder.WithUrl(resultLink);
+                embedBuilder.WithDescription($"{resultDesc}\n*This page was last updated {lastUpdated}*");
 
-                    embedBuilder.WithAuthor("R2Wiki", "https://avatars1.githubusercontent.com/u/49210367", resultLink);
-                    embedBuilder.WithTitle(resultTitle);
-                    embedBuilder.WithUrl(resultLink);
-                    embedBuilder.WithDescription($"{resultDesc}\n\n*This page was last updated {lastUpdated}*");
+                embedBuilder.AddField($"Other results ({int.Parse(nbOfResult) - 1})", $"[Click here to see the other results]({url})");
 
-                    embedBuilder.AddField($"Other results ({nbOfResult})", $"[Click here to see the other results]({url})");
-
-                    await ReplyAsync("", false, embedBuilder.Build());
-                }
-                else
-                {
-                    await ReplyAsync($"No result in the wiki for {search}.");
-                }
+                await ReplyAsync("", false, embedBuilder.Build());
+            }
+            else
+            {
+                await ReplyAsync($"No result in the wiki for {search}.");
             }
         }
     }

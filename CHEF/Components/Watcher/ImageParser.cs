@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using PuppeteerSharp;
+using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Vision.V1;
+using HtmlAgilityPack;
 
 namespace CHEF.Components.Watcher
 {
@@ -101,26 +103,25 @@ namespace CHEF.Components.Watcher
         private async Task<YandexImageQuery> QueryYandex(string imageUrl)
         {
             var res = new YandexImageQuery();
-            
-            using (var page = await HeadlessBrowser.Chromium.NewPageAsync())
+
+            var web = new HtmlWeb();
+            var document = (await web.LoadFromWebAsync($"{_postUrl}{imageUrl}&rpt=imageview")).DocumentNode;
+            var tags = document.SelectNodes("//*[@class=\"CbirItem CbirTags\"]//*[@class=\"Button2-Text\"]");
+            res.AddTags(tags);
+
+            // Catch any error in case the Cloud Vision Service is
+            // not correctly setup : An exception will be thrown
+            // If the project doesnt have billing info correctly filled
+            try
             {
-                await page.GoToAsync($"{_postUrl}{imageUrl}&rpt=imageview");
-                var tagsParent = await page.QuerySelectorAsync(".CbirItem.CbirTags");
-                if (tagsParent != null)
-                {
-                    var tags = await tagsParent.QuerySelectorAllAsync(".Button2-Text");
-                    await res.AddTags(tags);
-                }
-
-                var ocrParent = await page.QuerySelectorAsync(".CbirItem.CbirOcr");
-                if (ocrParent != null)
-                {
-                    await page.WaitForSelectorAsync(".CbirOcr-TextBlock.CbirOcr-TextBlock_level_text");
-                    var ocr = await page.QuerySelectorAllAsync(".CbirOcr-TextBlock.CbirOcr-TextBlock_level_text");
-                    await res.AddText(ocr);
-                }
+                var img = Image.FromUri(imageUrl);
+                res.AddText(CloudVisionOcr.AnnotatorClient.DetectText(img));
             }
-
+            catch (Exception e)
+            {
+                Logger.Log(e.ToString());
+            }
+            
             return res;
         }
 
@@ -134,24 +135,22 @@ namespace CHEF.Components.Watcher
                 _imageTags = new List<string>();
             }
 
-            public async Task AddTags(IEnumerable<ElementHandle> tags)
+            public void AddTags(HtmlNodeCollection tags)
             {
                 foreach (var tag in tags)
                 {
-                    _imageTags.Add(await tag.EvaluateFunctionAsync<string>("el => el.innerText"));
+                    _imageTags.Add(tag.InnerText);
                 }
             }
 
-            public async Task AddText(IEnumerable<ElementHandle> elements)
+            /// <summary>
+            /// For some reason the first entity contains all the entity with line break inbetween them.
+            /// If you want to iterate on each line, start at 1, not 0
+            /// </summary>
+            /// <param name="entities"></param>
+            public void AddText(IReadOnlyList<EntityAnnotation> entities)
             {
-                var sb = new StringBuilder();
-                foreach (var el in elements)
-                {
-                    sb.Append(await el.EvaluateFunctionAsync<string>("el => el.innerText"));
-                    sb.Append(" ");
-                }
-
-                ImageText = sb.ToString();
+                ImageText = entities[0].Description;
             }
 
             public bool ContainTag(string tag) => _imageTags.Any(t => t.Contains(tag));
