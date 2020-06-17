@@ -35,7 +35,7 @@ namespace CHEF.Components.Watcher
                 {
                     var outdatedMods = new StringBuilder();
 
-                    const string regexFindVer = "loading \\[(.*) (.*?)]";
+                    const string regexFindVer = "Loading \\[(.*?) ([0-9].*?)]";
                     var rx = new Regex(regexFindVer,
                         RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     var matches = rx.Matches(text);
