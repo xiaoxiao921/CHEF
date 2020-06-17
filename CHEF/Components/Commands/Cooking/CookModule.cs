@@ -74,9 +74,20 @@ namespace CHEF.Components.Commands.Cooking
             }
             else
             {
-                var noMatch = cmdName == null
-                    ? "Oh no ! My recipe book is empty... :("
-                    : $"No recipes with {cmdName} in their name";
+                string noMatch;
+                if (cmdName == null)
+                {
+                    noMatch = "Oh no ! My recipe book is empty... :(";
+                }
+                else
+                {
+                    noMatch = $"No recipes with {cmdName} in their name";
+                    if (page != 1)
+                    {
+                        noMatch += $"on page {page}";
+                    }
+                }
+
                 await ReplyAsync(noMatch);
             }
         }
