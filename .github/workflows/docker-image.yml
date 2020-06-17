@@ -12,6 +12,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Dotnet Setup
+      uses: actions/setup-dotnet@v1.5.0
+      with:
+        dotnet-version: 2.1.514
+    - name: Build with dotnet
+      run: dotnet build --configuration Release
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+    - name: Publish
+      run: dotnet publish CHEF.sln --configuration Release --framework netcoreapp2.1 --output ./publish --self-contained false
     - name: Login to DockerHub Registry
       run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
     - name: Get the version
