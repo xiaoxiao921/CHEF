@@ -33,7 +33,7 @@ namespace CHEF.Components.Commands.Cooking
             if (nameFilter != null)
             {
                 recipes = await Recipes.AsQueryable().Where(r => r.Name.ToLower().Contains(nameFilter.ToLower()))
-                    .ToListAsync();
+                    .Skip(NumberPerPage * page).Take(NumberPerPage).ToListAsync();
             }
             else
             {
