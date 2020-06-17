@@ -28,7 +28,7 @@ namespace CHEF.Components.Watcher
                 msg.Channel is SocketTextChannel &&
                 !msg.Author.IsBot &&
                 !msg.Author.IsWebhook &&
-                //msg.Channel.Name.Equals("tech-support") &&
+                msg.Channel.Name.Equals("tech-support") &&
                 msg.Attachments.Count == 1)
             {
                 var attachment = msg.Attachments.First();
