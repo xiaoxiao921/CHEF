@@ -14,8 +14,7 @@ services:
 
   chefbot:
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      image: xiaoxiao921/CHEF:latest
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
