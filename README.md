@@ -72,34 +72,24 @@ Note that when first created, your account should be setup as a free account, th
 Clone the repository:
 
 ```bash
-$ git clone --recursive https://github.com/xiaoxiao921/CHEF.git
+$ git clone https://github.com/xiaoxiao921/CHEF.git
 ```
 
 Insert your Discord token and PostgreSQL credentials from a fresh .env file.
+
+The location to your .json file called `ChefBot-ocr.json` containing your credentials for the service account is assumed to be in the same folder as the `docker-compose.yml`, feel free to change it by editing it.
 
 ```bash
 $ cd CHEF/Docker
 $ cp .env.template .env
 ```
 
-Make sure that a file called `ChefBot-ocr.json` also exists in the `Docker` folder.
+Finally, `docker-compose up` to launch the chef container.
 
-## Building for production (publishing):
+## Building the image yourself for production (publishing):
 
-```bash
-# Current directory should be where the CHEF.csproj file is sitting
-$ dotnet publish -c Release
-```
+You can setup a github action and let all the building and publishing get handled by this workflow [github action](https://github.com/xiaoxiao921/CHEF/blob/master/.github/workflows/docker-image.yml)
 
-This will put all the necessary dependencies on the same folder as the bot dll and make it ready for a Docker container.
+You'll need to have two secrets in your repo settings, called `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD`.
 
-### Docker
-
-Once the app is published, you can `cd` to that `publish/` folder and use the docker-composer file.
-
-You may want to change the docker-compose file depending on your server setup, notably on your database and its used volume.
-
-```bash
-$ cd bin/x64/Release/netcoreapp2.1/publish/
-$ docker-compose up
-```
+A build and a docker image will be made and published to your Dockerhub account each time you create a new release in the Github repo.
