@@ -22,22 +22,26 @@ namespace CHEF.Components.Watcher
             await Task.CompletedTask;
         }
 
-        private async Task MsgWatcherAsync(SocketMessage msg)
+        private Task MsgWatcherAsync(SocketMessage msg)
         {
-            var pasteBinRes = await _autoPastebin.Try(msg);
-
-            if (pasteBinRes.Length > 1)
-                await msg.Channel.SendMessageAsync(pasteBinRes);
-
-            var yandexRes = await _imageParser.Try(msg);
-
-            if (yandexRes.Length > 1)
-                await msg.Channel.SendMessageAsync(yandexRes);
-
-            if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
+            Task.Run(async () =>
             {
-                await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
-            }
+                var pasteBinRes = await _autoPastebin.Try(msg);
+
+                if (pasteBinRes.Length > 1)
+                    await msg.Channel.SendMessageAsync(pasteBinRes);
+
+                var yandexRes = await _imageParser.Try(msg);
+
+                if (yandexRes.Length > 1)
+                    await msg.Channel.SendMessageAsync(yandexRes);
+
+                if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
+                }
+            });
+            return Task.CompletedTask;
         }
     }
 }

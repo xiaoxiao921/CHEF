@@ -25,29 +25,34 @@ namespace CHEF.Components.Commands.Cooking
             Client.MessageReceived += RecipeShortcutAsync;
         }
 
-        private async Task RecipeShortcutAsync(SocketMessage msg)
+        private Task RecipeShortcutAsync(SocketMessage msg)
         {
-            if (!(msg is SocketUserMessage message))
-                return;
-
-            var argPos = 0;
-            if (!(message.HasCharPrefix('!', ref argPos) ||
-                  message.HasMentionPrefix(Client.CurrentUser, ref argPos)) ||
-                message.Author.IsBot)
-                return;
-
-            var cmdName = message.Content.Substring(1);
-            
-            using (var context = new RecipeContext())
+            Task.Run(async () =>
             {
-                var recipe = await context.Recipes.AsAsyncEnumerable()
-                    .FirstOrDefaultAsync(r => r.Name.Equals(cmdName, StringComparison.InvariantCultureIgnoreCase));
-                if (recipe != null)
+                if (!(msg is SocketUserMessage message))
+                    return;
+
+                var argPos = 0;
+                if (!(message.HasCharPrefix('!', ref argPos) ||
+                      message.HasMentionPrefix(Client.CurrentUser, ref argPos)) ||
+                    message.Author.IsBot)
+                    return;
+
+                var cmdName = message.Content.Substring(1);
+
+                using (var context = new RecipeContext())
                 {
-                    await msg.Channel.SendMessageAsync(
-                        $"**Recipe: {recipe.Name} (Owner: {recipe.OwnerName})**{Environment.NewLine}{recipe.Text}");
+                    var recipe = await context.Recipes.AsAsyncEnumerable()
+                        .FirstOrDefaultAsync(r => r.Name.Equals(cmdName, StringComparison.InvariantCultureIgnoreCase));
+                    if (recipe != null)
+                    {
+                        await msg.Channel.SendMessageAsync(
+                            $"**Recipe: {recipe.Name} (Owner: {recipe.OwnerName})**{Environment.NewLine}{recipe.Text}");
+                    }
                 }
-            }
+            });
+
+            return Task.CompletedTask;
         }
     }
 }

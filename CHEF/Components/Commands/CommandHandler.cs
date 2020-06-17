@@ -13,15 +13,20 @@ namespace CHEF.Components.Commands
 
         public CommandHandler(DiscordSocketClient client) : base(client)
         {
-            var config = new CommandServiceConfig { DefaultRunMode = RunMode.Async };
+            var config = new CommandServiceConfig
+            {
+                DefaultRunMode = RunMode.Async,
+                LogLevel = LogSeverity.Info
+            };
             Service = new CommandService(config);
         }
 
         public override async Task SetupAsync()
         {
+            Client.MessageReceived += HandleCommandAsync;
+
             Service.CommandExecuted += OnCommandExecutedAsync;
             Service.Log += LogAsync;
-            Client.MessageReceived += HandleCommandAsync;
 
             await Service.AddModulesAsync(Assembly.GetEntryAssembly(), null);
         }
@@ -39,20 +44,23 @@ namespace CHEF.Components.Commands
                 $"{commandName} was executed at {DateTime.UtcNow}."));
         }
 
-        private async Task HandleCommandAsync(SocketMessage msg)
+        private Task HandleCommandAsync(SocketMessage msg)
         {
-            if (!(msg is SocketUserMessage message))
-                return;
+            Task.Run(async () =>
+            {
+                if (!(msg is SocketUserMessage message))
+                    return;
 
-            var argPos = 0;
-            if (!(message.HasCharPrefix('!', ref argPos) ||
-                  message.HasMentionPrefix(Client.CurrentUser, ref argPos)) ||
-                message.Author.IsBot)
-                return;
+                var argPos = 0;
+                if (!(message.HasCharPrefix('!', ref argPos) ||
+                      message.HasMentionPrefix(Client.CurrentUser, ref argPos)) ||
+                    message.Author.IsBot)
+                    return;
 
-            var context = new SocketCommandContext(Client, message);
-
-            await Service.ExecuteAsync(context, argPos, null);
+                var context = new SocketCommandContext(Client, message);
+                await Service.ExecuteAsync(context, argPos, null);
+            });
+            return Task.CompletedTask;
         }
 
         private static async Task LogAsync(LogMessage logMessage)
@@ -64,6 +72,10 @@ namespace CHEF.Components.Commands
                 // We can also log this incident
                 Logger.Log($"{cmdException.Context.User} failed to execute '{cmdException.Command.Name}' in {cmdException.Context.Channel}.");
                 Logger.Log(cmdException.ToString());
+            }
+            else
+            {
+                Logger.Log(logMessage.Message);
             }
         }
     }
