@@ -14,7 +14,7 @@ services:
 
   chefbot:
     build:
-      image: xiaoxiao921/CHEF:latest
+      image: xiaoxiao921/chef:latest
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
