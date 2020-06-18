@@ -14,11 +14,11 @@ namespace CHEF
         private static DiscordSocketClient _client;
         private static IGuildUser _reportToUser;
         
-        internal static async Task Init(DiscordSocketClient client)
+        internal static void Init(DiscordSocketClient client)
         {
             _client = client;
             var guild = _client.GetGuild(562704639141740588);
-            _reportToUser = await ((IGuild)guild).GetUserAsync(125598628310941697);
+            _reportToUser = ((IGuild)guild).GetUserAsync(125598628310941697).Result;
         }
 
         internal static void Log(string msg)
