@@ -31,7 +31,7 @@ namespace CHEF.Components.Commands
                     sb.Append(alias);
                     sb.Append(" / ");
                 }
-                embedBuilder.AddField(sb.ToString(), embedFieldText);
+                embedBuilder.AddField("\u200B", $"{sb}\n{embedFieldText}");
             }
 
             await ReplyAsync("Here's a list of commands and their description: ", false, embedBuilder.Build());
@@ -55,7 +55,7 @@ namespace CHEF.Components.Commands
             embedBuilder.Author.WithName($"{userInfo.Username}#{userInfo.Discriminator}");
             embedBuilder.Author.WithIconUrl(userInfo.GetAvatarUrl());
 
-            embedBuilder.AddField($"{"" + '\u200B'}", $"{userInfo.Mention}");
+            embedBuilder.AddField("\u200B", $"{userInfo.Mention}");
 
             embedBuilder.AddField("Joined",
                 // ReSharper disable once PossibleInvalidOperationException
@@ -84,7 +84,7 @@ namespace CHEF.Components.Commands
             [Summary("The mod to get info from")]
             string modName)
         {
-            var modInfo = await Thunderstore.GetModInfo(modName);
+            var modInfo = await Thunderstore.GetModInfoV1(modName);
 
             if (modInfo == null)
             {
@@ -96,10 +96,10 @@ namespace CHEF.Components.Commands
             embedBuilder.WithColor(modInfo.IsDeprecated ? Color.Red : Color.Green);
 
             embedBuilder.WithAuthor(modInfo.Owner);
-            embedBuilder.WithTitle($"{modInfo.Name} v{modInfo.LatestPackage.VersionNumber}");
+            embedBuilder.WithTitle($"{modInfo.Name} v{modInfo.LatestPackage().VersionNumber}");
             embedBuilder.WithUrl(modInfo.PackageUrl.AbsoluteUri);
-            embedBuilder.WithDescription(modInfo.LatestPackage.Description);
-            embedBuilder.WithThumbnailUrl(modInfo.LatestPackage.Icon.AbsoluteUri);
+            embedBuilder.WithDescription(modInfo.LatestPackage().Description);
+            embedBuilder.WithThumbnailUrl(modInfo.LatestPackage().Icon.AbsoluteUri);
 
             if (modInfo.IsDeprecated)
             {
@@ -107,7 +107,7 @@ namespace CHEF.Components.Commands
             }
 
             embedBuilder.AddField("Rating Score", modInfo.RatingScore, true);
-            embedBuilder.AddField("Total downloads", modInfo.TotalDownloads, true);
+            embedBuilder.AddField("Total downloads", modInfo.TotalDownloads(), true);
 
             await ReplyAsync("", false, embedBuilder.Build());
         }

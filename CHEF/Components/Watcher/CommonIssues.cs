@@ -71,10 +71,10 @@ namespace CHEF.Components.Watcher
         /// <returns></returns>
         private static async Task<string> IsThisLatestModVersion(string modName, string otherVer)
         {
-            var modInfo = await Thunderstore.GetModInfo(modName);
+            var modInfo = await Thunderstore.GetModInfoV1(modName);
             if (modInfo != null)
             {
-                var latestVer = modInfo.LatestPackage.VersionNumber;
+                var latestVer = modInfo.LatestPackage().VersionNumber;
                 return !latestVer.Equals(otherVer) ? latestVer : null;
             }
 
