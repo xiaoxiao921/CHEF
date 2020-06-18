@@ -20,7 +20,20 @@ namespace CHEF
             const long iDeathHdId = 125598628310941697;
 
             _client = client;
-            _reportToUser = client.GetGuild(ror2ServerId)?.GetUser(iDeathHdId) ?? (IGuildUser) _client.Rest.GetGuildUserAsync(ror2ServerId, iDeathHdId).Result;
+            var guild = client.GetGuild(ror2ServerId);
+            if (guild == null)
+            {
+                Console.WriteLine("guild was null");
+            }
+            else
+            {
+                _reportToUser = guild.GetUser(iDeathHdId);
+                if (_reportToUser == null)
+                {
+                    Console.WriteLine("_reportToUser was null");
+                    _reportToUser = _client.Rest.GetGuildUserAsync(ror2ServerId, iDeathHdId).Result;
+                }
+            }
         }
 
         internal static void Log(string msg)
