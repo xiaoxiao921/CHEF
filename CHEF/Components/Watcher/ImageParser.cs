@@ -37,7 +37,8 @@ namespace CHEF.Components.Watcher
                 {
                     var fileType = System.IO.Path.GetExtension(attachment.Url);
                     if (fileType == ".png")
-                    {
+                    {Logger.Log("Preparing a query for Yandex.");
+
                         var botAnswer = new StringBuilder();
                         var queryResult = await QueryYandex(attachment.Url);
 
@@ -108,6 +109,7 @@ namespace CHEF.Components.Watcher
             var document = (await web.LoadFromWebAsync($"{_postUrl}{imageUrl}&rpt=imageview")).DocumentNode;
             var tags = document.SelectNodes("//*[@class=\"CbirItem CbirTags\"]//*[@class=\"Button2-Text\"]");
             res.AddTags(tags);
+            Logger.Log("Got the image tags.");
 
             // Catch any error in case the Cloud Vision Service is
             // not correctly setup : An exception will be thrown
@@ -116,6 +118,7 @@ namespace CHEF.Components.Watcher
             {
                 var img = Image.FromUri(imageUrl);
                 res.AddText(CloudVisionOcr.AnnotatorClient.DetectText(img));
+                Logger.Log("Got the image text.");
             }
             catch (Exception e)
             {
