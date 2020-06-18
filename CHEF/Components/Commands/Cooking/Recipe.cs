@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +18,11 @@ namespace CHEF.Components.Commands.Cooking
             // through the Package Manager Console with Add-Migration or dotnet ef
             //optionsBuilder.UseNpgsql("Host=dummy;Username=dummy;Password=dummy;Database=dummy");
 
-            optionsBuilder.UseNpgsql(global::CHEF.Database.Connection);
+            optionsBuilder.UseNpgsql(global::CHEF.Database.Connection, builder =>
+            {
+                // callback for validating the server certificate against a CA certificate file.
+                builder.RemoteCertificateValidationCallback(global::CHEF.Database.RemoteCertificateValidationCallback);
+            });
             optionsBuilder.UseSnakeCaseNamingConvention();
         }
 
