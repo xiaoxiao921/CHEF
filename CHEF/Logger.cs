@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Discord;
+using Discord.WebSocket;
 
 namespace CHEF
 {
@@ -8,9 +11,23 @@ namespace CHEF
     {
         private const string LogPrefix = "[CHEF]";
 
+        private static DiscordSocketClient _client;
+        private static IGuildUser _reportToUser;
+        
+        internal static async Task Init(DiscordSocketClient client)
+        {
+            _client = client;
+            var guild = _client.GetGuild(562704639141740588);
+            _reportToUser = await ((IGuild)guild).GetUserAsync(125598628310941697);
+        }
+
         internal static void Log(string msg)
         {
-            Console.WriteLine($"{LogPrefix} {msg}");
+            var log = $"{LogPrefix} {msg}";
+
+            Console.WriteLine(log);
+
+            Task.Run(async () => { await _reportToUser.SendMessageAsync(log); });
         }
 
         internal static void LogClassInit([CallerFilePath]string filePath = "")

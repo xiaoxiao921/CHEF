@@ -15,9 +15,11 @@ namespace CHEF
 
         private async Task MainAsync()
         {
-            Database.Init();
-
             await SetupBotLogin();
+
+            await Logger.Init(_client);
+
+            Database.Init();
 
             await ComponentHandler.Init(_client);
 
