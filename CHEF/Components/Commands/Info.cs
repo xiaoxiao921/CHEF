@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -15,26 +16,64 @@ namespace CHEF.Components.Commands
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
         [Command("help")]
-        public async Task Help()
+        public async Task Help(
+            [Summary("The (optional) command name to get more detailed info from")]
+            string cmdName = null)
         {
             var commands = CommandHandler.Service.Commands.ToList();
             var embedBuilder = new EmbedBuilder();
 
             commands.Remove(commands.Single(command => command.Name.Equals("help")));
-
-            foreach (CommandInfo command in commands)
+            if (cmdName == null)
             {
-                var embedFieldText = command.Summary ?? "No description available\n";
-                var sb = new StringBuilder();
-                foreach (var alias in command.Aliases)
+                foreach (CommandInfo command in commands)
                 {
-                    sb.Append(alias);
-                    sb.Append(" / ");
+                    string embedFieldText;
+                    if (command.Summary == null)
+                    {
+                        embedFieldText = "No description available\n";
+                    }
+                    else
+                    {
+                        embedFieldText = command.Summary;
+                        var parameters = command.Parameters;
+                        if (parameters != null)
+                        {
+                            embedFieldText += $"\n{parameters.Count} parameter{(parameters.Count > 1 ? "s" : "")}:\n";
+                            foreach (var param in parameters)
+                            {
+                                embedFieldText += $"{param.Type}: {param.Summary}\n";
+                            }
+                        }
+                    }
+                    var sb = new StringBuilder();
+                    foreach (var alias in command.Aliases)
+                    {
+                        sb.Append(alias);
+                        sb.Append(" / ");
+                    }
+                    embedBuilder.AddField("\u200B", $"{sb}\n{embedFieldText}");
                 }
-                embedBuilder.AddField("\u200B", $"{sb}\n{embedFieldText}");
-            }
 
-            await ReplyAsync("Here's a list of commands and their description: ", false, embedBuilder.Build());
+                await ReplyAsync("Here's a list of commands and their description: ", false, embedBuilder.Build());
+            }
+            else
+            {
+                var command = commands.FirstOrDefault(info =>
+                    info.Name.Equals(cmdName, StringComparison.InvariantCultureIgnoreCase));
+
+                string res;
+                if (command == null)
+                {
+                    res = $"Could not find any static command called `{cmdName}`.";
+                }
+                else
+                {
+                    res = command.Summary ?? "No description available\n";
+                }
+
+                await ReplyAsync(res);
+            }
         }
 
         [Command("userinfo")]
