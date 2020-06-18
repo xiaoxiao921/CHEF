@@ -46,7 +46,8 @@ namespace CHEF.Components.Watcher
                         {
                             var modName = match.Groups[1].ToString();
                             var verFromText = match.Groups[2].ToString();
-
+                            Logger.Log("modName : " + modName);
+                            Logger.Log("verFromText : " + verFromText);
                             var latestVer = await IsThisLatestModVersion(modName, verFromText);
                             if (latestVer != null)
                             {

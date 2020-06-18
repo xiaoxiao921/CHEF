@@ -37,11 +37,13 @@ namespace CHEF.Components.Watcher
                 {
                     var fileType = System.IO.Path.GetExtension(attachment.Url);
                     if (fileType == ".png")
-                    {Logger.Log("Preparing a query for Yandex.");
+                    {
+                        Logger.Log("Preparing a query for Yandex.");
 
                         var botAnswer = new StringBuilder();
                         var queryResult = await QueryYandex(attachment.Url);
 
+                        Logger.Log("Checking for outdated mods.");
                         var outdatedMods = await CommonIssues.CheckModsVersion(queryResult.ImageText);
                         if (outdatedMods != null)
                         {
@@ -51,6 +53,7 @@ namespace CHEF.Components.Watcher
                                 outdatedMods);
                         }
 
+                        Logger.Log("Checking if its a console image");
                         if (queryResult.IsAConsole())
                         {
                             botAnswer.AppendLine($"{msg.Author.Mention}, looks like you just uploaded a screenshot of a BepinEx console / log file." +
@@ -75,6 +78,7 @@ namespace CHEF.Components.Watcher
                             return botAnswer.ToString();
                         }
 
+                        Logger.Log("Checking if its a window explorer image");
                         if (queryResult.IsWindowExplorer() && 
                             (queryResult.ImageText.Contains("bepin", StringComparison.InvariantCultureIgnoreCase) || 
                              queryResult.ImageText.Contains("risk of rain", StringComparison.InvariantCultureIgnoreCase)))
@@ -118,7 +122,7 @@ namespace CHEF.Components.Watcher
             {
                 var img = Image.FromUri(imageUrl);
                 res.AddText(CloudVisionOcr.AnnotatorClient.DetectText(img));
-                Logger.Log("Got the image text.");
+                Logger.Log("Got the image text : " + res.ImageText);
             }
             catch (Exception e)
             {
