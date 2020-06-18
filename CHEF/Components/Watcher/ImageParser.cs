@@ -173,8 +173,10 @@ namespace CHEF.Components.Watcher
                 // screenshot with text: Экран с текстом , Скриншот с текстом
                 // dark image: Темное изображение
                 // black screen: черный экран
+                // notepad: код / чит код
 
-                return HasModLoadingText || ContainTag("Экран с текстом") && !IsWindowExplorer();
+                return HasModLoadingText ||
+                       (ContainTag("Экран с текстом") || ContainTag("код")) && !IsWindowExplorer();
             }
 
             public bool IsWindowExplorer()
