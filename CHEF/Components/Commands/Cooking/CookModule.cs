@@ -13,6 +13,9 @@ namespace CHEF.Components.Commands.Cooking
     [Alias("cook", "c")]
     public class CookModule : ModuleBase<SocketCommandContext>
     {
+        // May want to retrieve this dynamically instead
+        public static readonly string[] MultBotCommands = { "issue", "deprecate" };
+
         [Command("recipe")]
         [Summary
             ("Retrieves a command from the cook book.")]
@@ -130,9 +133,9 @@ namespace CHEF.Components.Commands.Cooking
                 return;
             }
 
-            var allStaticCmdAliases = CommandHandler.Service.Commands.SelectMany(cmdInfo => cmdInfo.Aliases);
-
-            if (allStaticCmdAliases.Any(alias => alias.Equals(cmdName)))
+            var allStaticCmdAliases = CommandHandler.Service.Commands.SelectMany(cmdInfo => cmdInfo.Aliases).ToList();
+            allStaticCmdAliases.AddRange(MultBotCommands);
+            if (allStaticCmdAliases.Any(alias => alias.Equals(cmdName, StringComparison.InvariantCultureIgnoreCase)))
             {
                 botAnswer.Clear();
                 botAnswer.AppendLine($"A static command called `{cmdName}` already exists, you can't have a recipe called the same as one of those.");
