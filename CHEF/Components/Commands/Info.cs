@@ -86,6 +86,12 @@ namespace CHEF.Components.Commands
         {
             var modInfo = await Thunderstore.GetModInfo(modName);
 
+            if (modInfo == null)
+            {
+                await ReplyAsync($"Could not find any mod that contains `{modName}` in its name.");
+                return;
+            }
+
             var embedBuilder = new EmbedBuilder();
             embedBuilder.WithColor(modInfo.IsDeprecated ? Color.Red : Color.Green);
 
@@ -108,7 +114,7 @@ namespace CHEF.Components.Commands
 
         [Command("wiki")]
         [Summary
-            ("Returns info about a mod that is uploaded on thunderstore.io")]
+            ("Returns info about wiki pages from the R2Wiki")]
         public async Task WikiSearch(
             [Remainder] string search)
         {
