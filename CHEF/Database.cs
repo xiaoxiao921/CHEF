@@ -19,7 +19,7 @@ namespace CHEF
             var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
             var dbName = Environment.GetEnvironmentVariable("POSTGRES_DB");
 
-            Connection = $"Host={host};Port={port};Username={username};Password={password};Database={dbName};SSL Mode=Prefer;Trust Server Certificate=true";
+            Connection = $"Host={host};Port={port};Username={username};Password={password};Database={dbName};SSL Mode=Prefer";
 
             // Debug code for dropping table, careful with that
             //
