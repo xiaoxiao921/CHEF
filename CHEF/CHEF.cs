@@ -17,13 +17,11 @@ namespace CHEF
         {
             await SetupBotLogin();
 
-            await ComponentHandler.Init(_client);
-
-            _client.Ready += () =>
+            _client.Ready += async () =>
             {
                 Logger.Init(_client);
                 Database.Init();
-                return Task.CompletedTask;
+                await ComponentHandler.Init(_client);
             };
 
             await Task.Delay(-1);
