@@ -80,7 +80,7 @@ namespace CHEF.Components.Commands.Cooking
 
         public string RealOwnerName(SocketGuild guild)
         {
-            var owner = guild.GetUser(OwnerId);
+            var owner = guild?.GetUser(OwnerId);
             return owner != null ? owner.ToString() : OwnerName;
         }
 

@@ -47,8 +47,9 @@ namespace CHEF.Components.Commands.Cooking
                         .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(cmdName.ToLower()));
                     if (recipe != null)
                     {
+                        var guild = (msg.Channel as SocketGuildChannel)?.Guild;
                         await msg.Channel.SendMessageAsync(
-                            $"**Recipe: {recipe.Name} (Owner: {recipe.OwnerName})**{Environment.NewLine}{recipe.Text}");
+                            $"**Recipe: {recipe.Name} (Owner: {recipe.RealOwnerName(guild)})**{Environment.NewLine}{recipe.Text}");
                         Logger.Log($"[{DateTime.UtcNow}] Recipe {recipe.Name} was executed by {msg.Author}.");
                     }
                 }
