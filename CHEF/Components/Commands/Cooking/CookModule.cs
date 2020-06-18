@@ -55,7 +55,7 @@ namespace CHEF.Components.Commands.Cooking
             using (var context = new RecipeContext())
             {
                 recipes = await context.GetRecipes(cmdName, page - 1);
-                totalRecipeCount = context.CountAll();
+                totalRecipeCount = recipes.Count;
             }
             var embedBuilder = new EmbedBuilder();
             foreach (var recipe in recipes)
