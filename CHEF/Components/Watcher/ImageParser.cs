@@ -51,6 +51,10 @@ namespace CHEF.Components.Watcher
                                 $"{msg.Author.Mention}, looks like you don't have the latest version installed of " +
                                 $"the following mod{(outdatedMods.Contains('\n') ? "s" : "")} :" + Environment.NewLine +
                                 outdatedMods);
+
+                            // Found mods, so its probably a console log that is screenshoted, lets add a tag so its for sure recognized
+                            // Todo: handle tags better directly
+                            queryResult.HasModLoadingText = true;
                         }
 
                         Logger.Log("Checking if its a console image");
@@ -136,6 +140,7 @@ namespace CHEF.Components.Watcher
         {
             private readonly List<string> _imageTags;
             public string ImageText { get; private set; }
+            public bool HasModLoadingText { get; set; }
 
             public YandexImageQuery()
             {
@@ -169,7 +174,7 @@ namespace CHEF.Components.Watcher
                 // dark image: Темное изображение
                 // black screen: черный экран
 
-                return ContainTag("Экран с текстом") && !IsWindowExplorer();
+                return HasModLoadingText || ContainTag("Экран с текстом") && !IsWindowExplorer();
             }
 
             public bool IsWindowExplorer()
