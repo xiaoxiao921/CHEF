@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using Google.Cloud.Vision.V1;
-using Npgsql;
 
 namespace CHEF
 {
@@ -21,6 +18,10 @@ namespace CHEF
 
             Connection = $"Host={host};Port={port};Username={username};Password={password};Database={dbName};SSL Mode=Prefer";
 
+#if DEBUG
+            Connection += ";Trust Server Certificate=true";
+#endif
+
             // Debug code for dropping table, careful with that
             //
             /*var conn = new NpgsqlConnection(Connection);
@@ -34,7 +35,6 @@ namespace CHEF
         // callback for validating the server certificate against a CA certificate file (here its base64 raw data equivalent).
         internal static bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            Logger.Log("Validating server certificate against POSTGRES_SERVER_CA env var.");
             byte[] certData = Convert.FromBase64String(Environment.GetEnvironmentVariable("POSTGRES_SERVER_CA",
                 EnvironmentVariableTarget.Process));
 
@@ -54,7 +54,7 @@ namespace CHEF
             caCertChain.Build(serverCert);
             if (caCertChain.ChainStatus.Length == 0)
             {
-                Logger.Log("Validated.");
+                Logger.Log("[DB CA] Validated.");
                 return true;
             }
 
@@ -63,7 +63,7 @@ namespace CHEF
                 // Check if we got any errors other than UntrustedRoot (which we will always get if we don't install the CA cert to the system store)
                 if (status.Status != X509ChainStatusFlags.UntrustedRoot)
                 {
-                    Logger.Log("Error X509Chain: " + status.Status);
+                    Logger.Log("[DB CA] Error X509Chain: " + status.Status);
                     return false;
                 }
             }
