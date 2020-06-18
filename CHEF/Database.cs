@@ -34,8 +34,8 @@ namespace CHEF
         // callback for validating the server certificate against a CA certificate file (here its base64 raw data equivalent).
         internal static bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            Logger.Log("Validating server certificate against POSTGRES_CA env var.");
-            byte[] certData = Convert.FromBase64String(Environment.GetEnvironmentVariable("POSTGRES_CA",
+            Logger.Log("Validating server certificate against POSTGRES_SERVER_CA env var.");
+            byte[] certData = Convert.FromBase64String(Environment.GetEnvironmentVariable("POSTGRES_SERVER_CA",
                 EnvironmentVariableTarget.Process));
 
             var caCert = new X509Certificate2(certData);
