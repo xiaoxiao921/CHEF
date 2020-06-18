@@ -16,9 +16,11 @@ namespace CHEF
         
         internal static void Init(DiscordSocketClient client)
         {
+            const long ror2ServerId = 562704639141740588;
+            const long iDeathHdId = 125598628310941697;
+
             _client = client;
-            var guild = _client.GetGuild(562704639141740588);
-            _reportToUser = ((IGuild)guild).GetUserAsync(125598628310941697).Result;
+            _reportToUser = client.GetGuild(ror2ServerId)?.GetUser(iDeathHdId) ?? (IGuildUser) _client.Rest.GetGuildUserAsync(ror2ServerId, iDeathHdId).Result;
         }
 
         internal static void Log(string msg)
