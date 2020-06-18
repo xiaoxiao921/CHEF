@@ -10,7 +10,7 @@ namespace CHEF.Components.Commands.Cooking
     public class RecipeContext : DbContext
     {
         public DbSet<Recipe> Recipes { get; set; }
-        public const int NumberPerPage = 25;
+        public const int NumberPerPage = 5;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -20,8 +20,10 @@ namespace CHEF.Components.Commands.Cooking
 
             optionsBuilder.UseNpgsql(global::CHEF.Database.Connection, builder =>
             {
+#if RELEASE
                 // callback for validating the server certificate against a CA certificate file.
                 builder.RemoteCertificateValidationCallback(global::CHEF.Database.RemoteCertificateValidationCallback);
+#endif
             });
             optionsBuilder.UseSnakeCaseNamingConvention();
         }
@@ -35,12 +37,20 @@ namespace CHEF.Components.Commands.Cooking
             List<Recipe> recipes;
             if (nameFilter != null)
             {
-                recipes = await Recipes.AsQueryable().Where(r => r.Name.ToLower().Contains(nameFilter.ToLower()))
-                    .Skip(NumberPerPage * page).Take(NumberPerPage).ToListAsync();
+                recipes = await Recipes.AsQueryable().
+                    Where(r => r.Name.ToLower().Contains(nameFilter.ToLower())).
+                    Skip(NumberPerPage * page).
+                    Take(NumberPerPage).
+                    OrderBy(r => r.Name).
+                    ToListAsync();
             }
             else
             {
-                recipes = await Recipes.AsQueryable().Skip(NumberPerPage * page).Take(NumberPerPage).ToListAsync();
+                recipes = await Recipes.AsQueryable().
+                    Skip(NumberPerPage * page).
+                    Take(NumberPerPage).
+                    OrderBy(r => r.Name).
+                    ToListAsync();
             }
 
             return recipes;

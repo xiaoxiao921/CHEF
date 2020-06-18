@@ -39,16 +39,19 @@ namespace CHEF.Components.Commands.Cooking
             ("Prints a list of all availables cooking recipes.")]
         [Alias("l", "ls")]
         public async Task ListRecipes(
-            [Summary("Optional word to filter the search.")]
-            string cmdName = null,
             [Summary("Optional page if multiple pages are returned.")]
-            int page = 1)
+            int page = 1,
+            [Summary("Optional word to filter the search.")]
+            string cmdName = null
+            )
         {
             if (page < 1)
                 page = 1;
 
             List<Recipe> recipes;
             int totalRecipeCount;
+            const int descMaxLength = 10;
+
             using (var context = new RecipeContext())
             {
                 recipes = await context.GetRecipes(cmdName, page - 1);
@@ -58,13 +61,14 @@ namespace CHEF.Components.Commands.Cooking
             foreach (var recipe in recipes)
             {
                 var recipeText = recipe.Text;
-                var recipeTextLength = recipeText.Length > 20 ? 20 : recipeText.Length;
+                var recipeTextLength = recipeText.Length > descMaxLength ? descMaxLength : recipeText.Length;
                 embedBuilder.AddField($"{recipe.Name}", $"{recipeText.Substring(0, recipeTextLength)}");
             }
 
             if (recipes.Count > 0)
             {
-                var totalPage = totalRecipeCount / RecipeContext.NumberPerPage;
+                var totalPage = totalRecipeCount / RecipeContext.NumberPerPage +
+                                (totalRecipeCount % RecipeContext.NumberPerPage == 0 ? 0 : 1);
                 if (totalPage == 0)
                     totalPage += 1;
 
