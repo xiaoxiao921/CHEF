@@ -21,16 +21,11 @@ namespace CHEF
 
             _client = client;
             var guild = client.GetGuild(ror2ServerId);
-            if (guild == null)
-            {
-                Console.WriteLine("guild was null");
-            }
-            else
+            if (guild != null)
             {
                 _reportToUser = guild.GetUser(iDeathHdId);
                 if (_reportToUser == null)
                 {
-                    Console.WriteLine("_reportToUser was null");
                     _reportToUser = _client.Rest.GetGuildUserAsync(ror2ServerId, iDeathHdId).Result;
                 }
             }
