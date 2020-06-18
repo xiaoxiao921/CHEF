@@ -32,11 +32,15 @@ namespace CHEF.Components.Commands.Cooking
             await Recipes.AsQueryable()
                 .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(recipeName.ToLower()));
 
-        public async Task<List<Recipe>> GetRecipes(string nameFilter = null, int page = 0)
+        public async Task<(List<Recipe>, int)> GetRecipes(string nameFilter = null, int page = 0)
         {
             List<Recipe> recipes;
+            int totalNumberOfRecipes;
             if (nameFilter != null)
             {
+                totalNumberOfRecipes = await Recipes.AsQueryable()
+                    .Where(r => r.Name.ToLower().Contains(nameFilter.ToLower())).CountAsync();
+
                 recipes = await Recipes.AsQueryable().
                     Where(r => r.Name.ToLower().Contains(nameFilter.ToLower())).
                     Skip(NumberPerPage * page).
@@ -46,6 +50,8 @@ namespace CHEF.Components.Commands.Cooking
             }
             else
             {
+                totalNumberOfRecipes = await Recipes.AsQueryable().CountAsync();
+
                 recipes = await Recipes.AsQueryable().
                     Skip(NumberPerPage * page).
                     Take(NumberPerPage).
@@ -53,7 +59,7 @@ namespace CHEF.Components.Commands.Cooking
                     ToListAsync();
             }
 
-            return recipes;
+            return (recipes, totalNumberOfRecipes);
         }
 
         public int CountAll()
