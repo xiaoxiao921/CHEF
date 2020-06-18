@@ -16,13 +16,11 @@ services:
     image: xiaoxiao921/chef:latest
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
-      GOOGLE_APPLICATION_CREDENTIALS: /does/not/matter.json
+      GOOGLE_SERVICE_CREDENTIALS_B64: ${GOOGLE_SERVICE_CREDENTIALS_B64}
       POSTGRES_HOST: db
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - ./ChefBot-ocr.json:/does/not/matter.json
     depends_on:
       - db
 

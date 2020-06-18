@@ -75,14 +75,22 @@ Clone the repository:
 $ git clone https://github.com/xiaoxiao921/CHEF.git
 ```
 
-Insert your Discord token and PostgreSQL credentials from a fresh .env file.
-
-The location to your .json file called `ChefBot-ocr.json` containing your credentials for the service account is assumed to be in the same folder as the `docker-compose.yml`, feel free to change it by editing it.
+Create a fresh .env file:
 
 ```bash
 $ cd CHEF/Docker
 $ cp .env.template .env
 ```
+
+Insert your Discord token and PostgreSQL credentials from this fresh .env file.
+
+If you have followed the links above for setting up your Google Cloud Service, you now have with you a .json file containing your credentials.
+
+The next step is to encode the content of this file with base64. 
+
+The content will be decoded and used to connect to your service when doing OCR.
+
+Insert the base64 string for the `GOOGLE_SERVICE_CREDENTIALS_B64` environment variable in the .env file.
 
 Finally, `docker-compose up` to launch the chef container.
 
