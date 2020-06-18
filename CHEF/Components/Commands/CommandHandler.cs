@@ -41,7 +41,7 @@ namespace CHEF.Components.Commands
             var commandName = command.IsSpecified ? command.Value.Name : "A command";
             await LogAsync(new LogMessage(LogSeverity.Info,
                 "CommandExecution",
-                $"{commandName} was executed at {DateTime.UtcNow}."));
+                $"[{DateTime.UtcNow}] {commandName} was executed by {context.User}."));
         }
 
         private Task HandleCommandAsync(SocketMessage msg)
