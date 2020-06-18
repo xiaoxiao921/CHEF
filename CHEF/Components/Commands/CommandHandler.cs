@@ -37,11 +37,13 @@ namespace CHEF.Components.Commands
             {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
             }
-            
-            var commandName = command.IsSpecified ? command.Value.Name : "A command";
-            await LogAsync(new LogMessage(LogSeverity.Info,
-                "CommandExecution",
-                $"[{DateTime.UtcNow}] {commandName} was executed by {context.User}."));
+
+            if (command.IsSpecified)
+            {
+                await LogAsync(new LogMessage(LogSeverity.Info,
+                    "CommandExecution",
+                    $"[{DateTime.UtcNow}] {command.Value.Name} was executed by {context.User}."));
+            }
         }
 
         private Task HandleCommandAsync(SocketMessage msg)

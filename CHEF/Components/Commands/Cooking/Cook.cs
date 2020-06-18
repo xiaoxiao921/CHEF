@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
@@ -42,12 +43,13 @@ namespace CHEF.Components.Commands.Cooking
 
                 using (var context = new RecipeContext())
                 {
-                    var recipe = await context.Recipes.AsAsyncEnumerable()
+                    var recipe = await context.Recipes.AsQueryable()
                         .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(cmdName.ToLower()));
                     if (recipe != null)
                     {
                         await msg.Channel.SendMessageAsync(
                             $"**Recipe: {recipe.Name} (Owner: {recipe.OwnerName})**{Environment.NewLine}{recipe.Text}");
+                        Logger.Log($"[{DateTime.UtcNow}] Recipe {recipe.Name} was executed by {msg.Author}.");
                     }
                 }
             });
