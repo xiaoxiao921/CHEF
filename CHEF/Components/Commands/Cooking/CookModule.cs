@@ -207,7 +207,7 @@ namespace CHEF.Components.Commands.Cooking
                 if (!existingRecipe.CanEdit(gUser))
                 {
                     botAnswer.Clear();
-                    botAnswer.AppendLine("You don't own that recipe / are not atleast a core dev, you can't change it.");
+                    botAnswer.AppendLine("You don't own that recipe / don't have the required permission, you can't change it.");
 
                     await ReplyAsync(botAnswer.ToString());
                     return;
@@ -260,7 +260,7 @@ namespace CHEF.Components.Commands.Cooking
                 if (!existingRecipe.CanEdit(gUser))
                 {
                     botAnswer.Clear();
-                    botAnswer.AppendLine("You don't own that recipe / are not atleast a core dev, you can't delete it.");
+                    botAnswer.AppendLine("You don't own that recipe / don't have the required permission, you can't delete it.");
 
                     await ReplyAsync(botAnswer.ToString());
                     return;
@@ -288,8 +288,8 @@ namespace CHEF.Components.Commands.Cooking
             using (var context = new RecipeContext())
             {
                 var duplicates = context.Recipes.AsQueryable().
-                    GroupBy(r => r).
-                    Where(r => r.Count() > 1)
+                    GroupBy(r => new { r.Name }).
+                    Where(g => g.Count() > 1)
                     .Select(r => r.Key);
 
                 foreach (var duplicate in duplicates)
@@ -301,7 +301,7 @@ namespace CHEF.Components.Commands.Cooking
                 await context.SaveChangesAsync();
             }
 
-            botAnswer.AppendLine($"Successfully deleted `{nbDuplicate}` rows that were duplicated.");
+            botAnswer.AppendLine($"Successfully deleted `{nbDuplicate}` recipes that were duplicate.");
             await ReplyAsync(botAnswer.ToString());
         }
     }
