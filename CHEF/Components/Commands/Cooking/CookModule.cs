@@ -289,14 +289,15 @@ namespace CHEF.Components.Commands.Cooking
             {
                 var duplicates = context.Recipes.AsQueryable().
                     GroupBy(r => new { r.Name }).
-                    Where(g => g.Count() > 1);
+                    Where(g => g.Count() > 1).
+                    Select(r => r.Key);
 
                 nbDuplicate = duplicates.Count();
 
                 foreach (var duplicate in duplicates)
                 {
-                    Logger.Log("duplicate recipe : " + duplicate.Key.Name);
-                    context.Remove(context.GetRecipe(duplicate.Key.Name));
+                    Logger.Log("duplicate recipe : " + duplicate.Name);
+                    context.Remove(context.GetRecipe(duplicate.Name));
                 }
 
                 await context.SaveChangesAsync();
