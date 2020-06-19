@@ -87,6 +87,6 @@ namespace CHEF.Components.Commands.Cooking
         public bool IsOwner(SocketGuildUser user) => OwnerId == user.Id;
 
         public bool CanEdit(SocketGuildUser user) =>
-            IsOwner(user) || user.Roles.Any(role => role.Name.Equals(Roles.CoreDeveloper) || role.Name.Equals(Roles.Moderator));
+            IsOwner(user) || user.Roles.Any(role => PermissionSystem.HasRequiredPermission(role, PermissionLevel.Elevated));
     }
 }
