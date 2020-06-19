@@ -83,7 +83,7 @@ namespace CHEF.Components.Commands.Cooking
                 string noMatch;
                 if (cmdName == null)
                 {
-                    noMatch = "Oh no ! My recipe book is empty... :(";
+                    noMatch = page == 1 ? "Oh no ! My recipe book is empty... :(" : "Page number too high.";
                 }
                 else
                 {
