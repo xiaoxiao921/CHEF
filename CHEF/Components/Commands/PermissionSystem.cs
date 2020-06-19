@@ -51,11 +51,14 @@ namespace CHEF.Components.Commands
             return roleLevel >= requiredLevel;
         }
 
+        public static SocketRole GetRefRole(SocketGuild guild, PermissionLevel level) =>
+            GuildRolePermissions[guild].RefRoleToPermissionLevel[(int)level];
+
         public class RolesPermissionLevel
         {
             private static readonly int PermissionLevelCount = Enum.GetNames(typeof(PermissionLevel)).Length;
 
-            private int[] _rolePositionToPermissionLevel;
+            public SocketRole[] RefRoleToPermissionLevel;
             public Dictionary<SocketRole, PermissionLevel> Roles { get; }
             public DateTime Timestamp { get; }
 
@@ -72,36 +75,38 @@ namespace CHEF.Components.Commands
                 }
             }
 
-            public void DefineRolesPositionsToPermLevels(SocketGuild guild)
+            private void DefineRolesPositionsToPermLevels(SocketGuild guild)
             {
-                var rolePositions = new int[PermissionLevelCount];
-                rolePositions[0] = guild.EveryoneRole.Position;
+                var refRoles = new SocketRole[PermissionLevelCount];
+                refRoles[0] = guild.EveryoneRole;
                 foreach (var role in guild.Roles)
                 {
                     //todo: remove DefinedRoles and make this configurable at runtime instead
 
                     if (role.Name.Equals(DefinedRoles.ModDeveloper))
                     {
-                        rolePositions[1] = role.Position;
+                        refRoles[1] = role;
                         continue;
                     }
 
                     if (role.Name.Equals(DefinedRoles.CoreDeveloper))
                     {
-                        rolePositions[2] = role.Position;
+                        refRoles[2] = role;
                     }
                 }
-                _rolePositionToPermissionLevel = rolePositions;
+                RefRoleToPermissionLevel = refRoles;
             }
 
             private PermissionLevel GetPermissionLevelFromRole(SocketRole role)
             {
                 var level = PermissionLevel.None;
-                Logger.Log("role : " + role.Name + " | pos : " + role.Position);
-                for (var i = 0; i < _rolePositionToPermissionLevel.Length; i++)
+
+                for (var i = 0; i < RefRoleToPermissionLevel.Length; i++)
                 {
-                    var position = _rolePositionToPermissionLevel[i];
-                    level = role.Position >= position ? (PermissionLevel)i : level;
+                    // Higher position value = Higher on the role hierarchy
+
+                    var refRole = RefRoleToPermissionLevel[i];
+                    level = role.Position >= refRole.Position ? (PermissionLevel)i : level;
                 }
 
                 return level;
@@ -126,11 +131,12 @@ namespace CHEF.Components.Commands
         {
             if (context.User is SocketGuildUser gUser)
             {
-                PermissionSystem.UpdateCache(context.Guild as SocketGuild);
+                var guild = context.Guild as SocketGuild;
+                PermissionSystem.UpdateCache(guild);
 
                 return Task.FromResult(gUser.Roles.Any(r => PermissionSystem.HasRequiredPermission(r, _requiredLevel))
                     ? PreconditionResult.FromSuccess()
-                    : PreconditionResult.FromError($"You must be atleast a {_requiredLevel} to run this command."));
+                    : PreconditionResult.FromError($"You must be atleast a {PermissionSystem.GetRefRole(guild, _requiredLevel).Name} to run this command."));
             }
 
             return Task.FromResult(PreconditionResult.FromError("You must be in a guild to run this command."));
