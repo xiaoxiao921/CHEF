@@ -102,7 +102,7 @@ namespace CHEF.Components.Commands.Cooking
         [Summary
             ("Creates a new command and add it to the cook book.")]
         [Alias("n", "mk", "create")]
-        [RequireRole(Roles.ModDeveloper)]
+        [RequireRole(PermissionLevel.ModDev)]
         public async Task NewRecipe(
             [Summary("The name to give to the command")]
             string cmdName,
@@ -161,6 +161,13 @@ namespace CHEF.Components.Commands.Cooking
                     OwnerId = Context.User.Id,
                     OwnerName = Context.User.ToString()
                 });
+                await context.Recipes.AddAsync(new Recipe
+                {
+                    Name = cmdName,
+                    Text = text,
+                    OwnerId = Context.User.Id,
+                    OwnerName = Context.User.ToString()
+                });
                 await context.SaveChangesAsync();
             }
 
@@ -173,7 +180,7 @@ namespace CHEF.Components.Commands.Cooking
         [Summary
             ("Edits a command that already exists in the cook book.")]
         [Alias("e")]
-        [RequireRole(Roles.ModDeveloper)]
+        [RequireRole(PermissionLevel.ModDev)]
         public async Task EditRecipe(
             [Summary("The name of the command to edit")]
             string cmdName,
@@ -229,7 +236,7 @@ namespace CHEF.Components.Commands.Cooking
         [Summary
             ("Deletes an exisiting command from the cook book.")]
         [Alias("d", "del", "rm", "remove")]
-        [RequireRole(Roles.ModDeveloper)]
+        [RequireRole(PermissionLevel.ModDev)]
         public async Task DeleteRecipe(
             [Summary("The name of the command to delete")]
             string cmdName)
@@ -266,6 +273,35 @@ namespace CHEF.Components.Commands.Cooking
 
             botAnswer.Clear();
             botAnswer.AppendLine($"Successfully deleted the cooking recipe called `{cmdName}`");
+            await ReplyAsync(botAnswer.ToString());
+        }
+
+        [Command("rmd")]
+        [Summary
+            ("Removes duplicate recipes from the book.")]
+        [RequireRole(PermissionLevel.Elevated)]
+        public async Task DeleteDuplicateRecipes()
+        {
+            var botAnswer = new StringBuilder("I can't cook ???");
+
+            int nbDuplicate = 0;
+            using (var context = new RecipeContext())
+            {
+                var duplicates = context.Recipes.AsQueryable().
+                    GroupBy(r => r).
+                    Where(r => r.Count() > 1)
+                    .Select(r => r.Key);
+
+                foreach (var duplicate in duplicates)
+                {
+                    Logger.Log("duplicate recipe : " + duplicate.Name);
+                }
+
+                context.RemoveRange(duplicates.ToList());
+                await context.SaveChangesAsync();
+            }
+
+            botAnswer.AppendLine($"Successfully deleted `{nbDuplicate}` rows that were duplicated.");
             await ReplyAsync(botAnswer.ToString());
         }
     }
