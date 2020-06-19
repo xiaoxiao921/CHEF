@@ -297,7 +297,7 @@ namespace CHEF.Components.Commands.Cooking
                 foreach (var duplicate in duplicates)
                 {
                     Logger.Log("duplicate recipe : " + duplicate.Name);
-                    context.Remove(context.GetRecipe(duplicate.Name));
+                    context.Remove(await context.GetRecipe(duplicate.Name));
                 }
 
                 await context.SaveChangesAsync();
