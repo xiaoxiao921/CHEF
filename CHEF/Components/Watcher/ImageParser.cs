@@ -96,7 +96,7 @@ namespace CHEF.Components.Watcher
                             {
                                 botAnswer.AppendLine(
                                     "If you are struggling installing BepInEx / R2API: " + Environment.NewLine + 
-                                    $"There is a video and an image at the bottom of the <#{faqChannel}> that explains how to install them properly.");
+                                    $"There is a video and an image at the bottom of the <#{faqChannel.Id}> that explains how to install them properly.");
                             }
                             botAnswer.AppendLine("If the issue is something else, just wait for help.");
 
