@@ -284,20 +284,19 @@ namespace CHEF.Components.Commands.Cooking
         {
             var botAnswer = new StringBuilder("I can't cook ???");
 
-            int nbDuplicate = 0;
+            int nbDuplicate;
             using (var context = new RecipeContext())
             {
                 var duplicates = context.Recipes.AsQueryable().
                     GroupBy(r => new { r.Name }).
-                    Where(g => g.Count() > 1).
-                    SelectMany(g => g.ToList());
+                    Where(g => g.Count() > 1);
 
                 nbDuplicate = duplicates.Count();
 
                 foreach (var duplicate in duplicates)
                 {
-                    Logger.Log("duplicate recipe : " + duplicate.Name);
-                    context.Remove(duplicate);
+                    Logger.Log("duplicate recipe : " + duplicate.Key.Name);
+                    context.Remove(context.GetRecipe(duplicate.Key.Name));
                 }
 
                 await context.SaveChangesAsync();
