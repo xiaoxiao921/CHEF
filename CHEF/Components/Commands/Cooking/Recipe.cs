@@ -42,10 +42,10 @@ namespace CHEF.Components.Commands.Cooking
             }
             if (ownerName != null)
             {
-                var realOwnerNameQuery = query.Where(r => r.RealOwnerName(context.Guild).ToLower().Contains(ownerName.ToLower()));
+                var realOwnerNameQuery = query.ToList().Where(r => r.RealOwnerName(context.Guild).ToLower().Contains(ownerName.ToLower()));
                 var cachedNameQuery = query.Where(r => r.OwnerName.ToLower().Contains(ownerName.ToLower()));
 
-                query = realOwnerNameQuery.Count() >= cachedNameQuery.Count() ? realOwnerNameQuery : cachedNameQuery;
+                query = realOwnerNameQuery.Count() >= cachedNameQuery.Count() ? realOwnerNameQuery.AsQueryable() : cachedNameQuery;
             }
             var totalNumberOfRecipes = await query.CountAsync();
 
