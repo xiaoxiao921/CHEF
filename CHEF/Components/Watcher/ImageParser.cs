@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
-using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Vision.V1;
 using HtmlAgilityPack;
 
@@ -57,6 +56,17 @@ namespace CHEF.Components.Watcher
                             queryResult.HasModLoadingText = true;
                         }
 
+                        Logger.Log("Checking if its a version mismatch problem");
+                        if (queryResult.ImageText.Contains("version mismatch", StringComparison.InvariantCultureIgnoreCase) ||
+                            queryResult.ImageText.Contains("Yours=MOD", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            botAnswer.AppendLine($"{msg.Author.Mention}, looks like you just uploaded a screenshot of a lobby game version mismatch.");
+                                botAnswer.AppendLine(CommonIssues.VersionMismatch);
+                            botAnswer.AppendLine("If the issue is something else, just wait for help.");
+
+                            return botAnswer.ToString();
+                        }
+
                         Logger.Log("Checking if its a console image");
                         if (queryResult.IsAConsole())
                         {
@@ -66,11 +76,7 @@ namespace CHEF.Components.Watcher
                             
                             if (msg.Content.Contains("crash", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                botAnswer.AppendLine("You also mentioned the word `crash` in your message." + Environment.NewLine + 
-                                                     "Here is the file path for a log file that could be more useful to us :" + Environment.NewLine +
-                                                     @"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`" + Environment.NewLine +
-                                                     "or" + Environment.NewLine + 
-                                                     @"`C:\Users\< UserName >\AppData\Local\Temp\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`");
+                                botAnswer.AppendLine(CommonIssues.CrashLogLocation);
                             }
                             else
                             {
