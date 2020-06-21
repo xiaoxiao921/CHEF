@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,32 +33,25 @@ namespace CHEF.Components.Commands.Cooking
             await Recipes.AsQueryable()
                 .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(recipeName.ToLower()));
 
-        public async Task<(List<Recipe>, int)> GetRecipes(string nameFilter = null, int page = 0)
+        public async Task<(List<Recipe>, int)> GetRecipes(SocketCommandContext context, string nameFilter = null, int page = 0, string ownerName = null)
         {
-            List<Recipe> recipes;
-            int totalNumberOfRecipes;
+            var query = Recipes.AsQueryable();
             if (nameFilter != null)
             {
-                totalNumberOfRecipes = await Recipes.AsQueryable()
-                    .Where(r => r.Name.ToLower().Contains(nameFilter.ToLower())).CountAsync();
-
-                recipes = await Recipes.AsQueryable().
-                    Where(r => r.Name.ToLower().Contains(nameFilter.ToLower())).
-                    Skip(NumberPerPage * page).
-                    Take(NumberPerPage).
-                    OrderBy(r => r.Name).
-                    ToListAsync();
+                query = query.Where(r => r.Name.ToLower().Contains(nameFilter.ToLower()));
             }
-            else
+            if (ownerName != null)
             {
-                totalNumberOfRecipes = await Recipes.AsQueryable().CountAsync();
-
-                recipes = await Recipes.AsQueryable().
-                    Skip(NumberPerPage * page).
-                    Take(NumberPerPage).
-                    OrderBy(r => r.Name).
-                    ToListAsync();
+                query = query.Where(r => r.RealOwnerName(context.Guild).ToLower().Contains(ownerName.ToLower()) ||
+                                         r.OwnerName.ToLower().Contains(ownerName.ToLower()));
             }
+            var totalNumberOfRecipes = await query.CountAsync();
+
+            var recipes = await query.
+                Skip(NumberPerPage * page).
+                Take(NumberPerPage).
+                OrderBy(r => r.Name).
+                ToListAsync();
 
             return (recipes, totalNumberOfRecipes);
         }
