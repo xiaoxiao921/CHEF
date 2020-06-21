@@ -367,7 +367,7 @@ namespace CHEF.Components.Commands.Cooking
             var recipesToRemove = new List<Recipe>();
             using (var context = new RecipeContext())
             {
-                var forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains(':'));
+                var forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains(":"));
 
                 nbForbidden = forbiddens.Count();
 

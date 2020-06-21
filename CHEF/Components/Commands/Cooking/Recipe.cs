@@ -42,11 +42,10 @@ namespace CHEF.Components.Commands.Cooking
             }
             if (ownerName != null)
             {
-                // Make it happens clientside since it cannot translate it for some reason
-                // todo : fix this, it may be intense on cpu
-                query = (await query.ToListAsync()).
-                    Where(r => r.RealOwnerName(context.Guild).ToLower().Contains(ownerName.ToLower()) || 
-                               r.OwnerName.ToLower().Contains(ownerName.ToLower())).AsQueryable();
+                var realOwnerNameQuery = query.Where(r => r.RealOwnerName(context.Guild).ToLower().Contains(ownerName.ToLower()));
+                var cachedNameQuery = query.Where(r => r.OwnerName.ToLower().Contains(ownerName.ToLower()));
+
+                query = realOwnerNameQuery.Count() >= cachedNameQuery.Count() ? realOwnerNameQuery : cachedNameQuery;
             }
             var totalNumberOfRecipes = await query.CountAsync();
 
