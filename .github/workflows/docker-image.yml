@@ -35,3 +35,5 @@ jobs:
       run: docker build . --file Docker/Dockerfile --tag xiaoxiao921/chef:latest
     - name: Push the latest Docker image
       run: docker push xiaoxiao921/chef:latest
+    - name: Notify Webhook
+      run: curl -X POST ${{ secrets.NOTIFY_WEBHOOK }}
