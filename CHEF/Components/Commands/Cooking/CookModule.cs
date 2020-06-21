@@ -327,8 +327,6 @@ namespace CHEF.Components.Commands.Cooking
         [RequireRole(PermissionLevel.Elevated)]
         public async Task DeleteDuplicateRecipes()
         {
-            var botAnswer = new StringBuilder("I can't cook ???");
-
             int nbDuplicate;
             var nameOfRecipesToRemove = new List<string>();
             using (var context = new RecipeContext())
@@ -359,9 +357,8 @@ namespace CHEF.Components.Commands.Cooking
 
                 await context.SaveChangesAsync();
             }
-
-            botAnswer.AppendLine($"Successfully deleted `{nbDuplicate}` recipes that were duplicate.");
-            await ReplyAsync(botAnswer.ToString());
+            
+            await ReplyAsync($"Successfully deleted `{nbDuplicate}` recipes that were duplicate.");
 
             int nbForbidden;
             var recipesToRemove = new List<Recipe>();
@@ -386,9 +383,8 @@ namespace CHEF.Components.Commands.Cooking
 
                 await context.SaveChangesAsync();
             }
-
-            botAnswer.AppendLine($"Successfully deleted `{nbForbidden}` recipes that had forbidden characters in them.");
-            await ReplyAsync(botAnswer.ToString());
+            
+            await ReplyAsync($"Successfully deleted `{nbForbidden}` recipes that had forbidden characters in them.");
         }
     }
 }
