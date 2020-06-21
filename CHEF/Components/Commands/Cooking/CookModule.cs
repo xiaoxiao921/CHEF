@@ -330,6 +330,7 @@ namespace CHEF.Components.Commands.Cooking
             var botAnswer = new StringBuilder("I can't cook ???");
 
             int nbDuplicate;
+            var nameOfRecipesToRemove = new List<string>();
             using (var context = new RecipeContext())
             {
                 var duplicates = context.Recipes.AsQueryable().
@@ -342,7 +343,18 @@ namespace CHEF.Components.Commands.Cooking
                 foreach (var duplicate in duplicates)
                 {
                     Logger.Log("duplicate recipe : " + duplicate.Name);
-                    context.Remove(await context.GetRecipe(duplicate.Name));
+                    nameOfRecipesToRemove.Add(duplicate.Name);
+                }
+
+                await context.SaveChangesAsync();
+            }
+
+            using (var context = new RecipeContext())
+            {
+                foreach (var rName in nameOfRecipesToRemove)
+                {
+                    var r = context.GetRecipe(rName).Result;
+                    context.Remove(r);
                 }
 
                 await context.SaveChangesAsync();
@@ -352,6 +364,7 @@ namespace CHEF.Components.Commands.Cooking
             await ReplyAsync(botAnswer.ToString());
 
             int nbForbidden;
+            var recipesToRemove = new List<Recipe>();
             using (var context = new RecipeContext())
             {
                 var forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains(':'));
@@ -361,8 +374,15 @@ namespace CHEF.Components.Commands.Cooking
                 foreach (var forbidden in forbiddens)
                 {
                     Logger.Log("forbidden recipe : " + forbidden.Name);
-                    context.Remove(await context.GetRecipe(forbidden.Name));
+                    recipesToRemove.Add(forbidden);
                 }
+
+                await context.SaveChangesAsync();
+            }
+
+            using (var context = new RecipeContext())
+            {
+                context.RemoveRange(recipesToRemove);
 
                 await context.SaveChangesAsync();
             }
