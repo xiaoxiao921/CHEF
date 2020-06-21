@@ -37,16 +37,7 @@ namespace CHEF.Components.Commands.Cooking
             await ReplyAsync(botAnswer);
         }
 
-        [Command("list")]
-        [Summary
-            ("Prints a list of all availables cooking recipes.")]
-        [Alias("l", "ls")]
-        public async Task ListRecipes(
-            [Summary("Optional page if multiple pages are returned.")]
-            int page = 1,
-            [Summary("Optional word to filter the search.")]
-            string cmdName = null
-            )
+        private async Task ListRecipesInternal(string ownerName = null, int page = 1, string cmdName = null)
         {
             if (page < 1)
                 page = 1;
@@ -57,7 +48,7 @@ namespace CHEF.Components.Commands.Cooking
 
             using (var context = new RecipeContext())
             {
-                (recipes, totalRecipeCount) = await context.GetRecipes(cmdName, page - 1);
+                (recipes, totalRecipeCount) = await context.GetRecipes(Context, cmdName, page - 1, ownerName);
             }
             var embedBuilder = new EmbedBuilder();
             foreach (var recipe in recipes)
@@ -83,7 +74,16 @@ namespace CHEF.Components.Commands.Cooking
                 string noMatch;
                 if (cmdName == null)
                 {
-                    noMatch = page == 1 ? "Oh no ! My recipe book is empty... :(" : "Page number too high.";
+                    if (page == 1)
+                    {
+                        noMatch = ownerName == null ? 
+                            "Oh no ! My recipe book is empty... :(" : 
+                            $"No recipes found from an author named {ownerName}.";
+                    }
+                    else
+                    {
+                        noMatch = "Page number is too high.";
+                    }
                 }
                 else
                 {
@@ -92,10 +92,44 @@ namespace CHEF.Components.Commands.Cooking
                     {
                         noMatch += $"on page {page}";
                     }
+                    if (ownerName != null)
+                    {
+                        noMatch += $" from an author named {ownerName}";
+                    }
                 }
 
                 await ReplyAsync(noMatch);
             }
+        }
+
+        [Command("list")]
+        [Summary
+            ("Prints a list of all availables cooking recipes.")]
+        [Alias("l", "ls")]
+        public async Task ListRecipes(
+            [Summary("Optional page if multiple pages are returned.")]
+            int page = 1,
+            [Summary("Optional word to filter the search.")]
+            string cmdName = null
+            )
+        {
+            await ListRecipesInternal(null, page, cmdName);
+        }
+
+        [Command("listuser")]
+        [Summary
+            ("Prints a list of all availables cooking recipes from a specified user.")]
+        [Alias("lu", "lsu")]
+        public async Task ListUserRecipes(
+            [Summary("Name of the recipe owner.")]
+            string ownerName,
+            [Summary("Optional page if multiple pages are returned.")]
+            int page = 1,
+            [Summary("Optional word to filter the search.")]
+            string cmdName = null
+            )
+        {
+            await ListRecipesInternal(ownerName, page, cmdName);
         }
 
         [Command("new")]
@@ -111,6 +145,15 @@ namespace CHEF.Components.Commands.Cooking
             string text)
         {
             var botAnswer = new StringBuilder("I can't cook ???");
+
+            if (text.Contains(':'))
+            {
+                botAnswer.Clear();
+                botAnswer.AppendLine("You can't have a recipe that has `:` in its name.");
+
+                await ReplyAsync(botAnswer.ToString());
+                return;
+            }
 
             Recipe existingRecipe;
             using (var context = new RecipeContext())
@@ -142,7 +185,6 @@ namespace CHEF.Components.Commands.Cooking
                 await ReplyAsync(botAnswer.ToString());
                 return;
             }
-
             if (text.Equals(string.Empty))
             {
                 botAnswer.Clear();
@@ -161,6 +203,8 @@ namespace CHEF.Components.Commands.Cooking
                     OwnerId = Context.User.Id,
                     OwnerName = Context.User.ToString()
                 });
+#if DEBUG
+                // Testing duplicates
                 await context.Recipes.AddAsync(new Recipe
                 {
                     Name = cmdName,
@@ -168,6 +212,7 @@ namespace CHEF.Components.Commands.Cooking
                     OwnerId = Context.User.Id,
                     OwnerName = Context.User.ToString()
                 });
+#endif
                 await context.SaveChangesAsync();
             }
 
@@ -278,7 +323,7 @@ namespace CHEF.Components.Commands.Cooking
 
         [Command("rmd")]
         [Summary
-            ("Removes duplicate recipes from the book.")]
+            ("Debug: Removes duplicate / forbidden recipes from the book.")]
         [RequireRole(PermissionLevel.Elevated)]
         public async Task DeleteDuplicateRecipes()
         {
@@ -304,6 +349,25 @@ namespace CHEF.Components.Commands.Cooking
             }
 
             botAnswer.AppendLine($"Successfully deleted `{nbDuplicate}` recipes that were duplicate.");
+            await ReplyAsync(botAnswer.ToString());
+
+            int nbForbidden;
+            using (var context = new RecipeContext())
+            {
+                var forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains(':'));
+
+                nbForbidden = forbiddens.Count();
+
+                foreach (var forbidden in forbiddens)
+                {
+                    Logger.Log("forbidden recipe : " + forbidden.Name);
+                    context.Remove(await context.GetRecipe(forbidden.Name));
+                }
+
+                await context.SaveChangesAsync();
+            }
+
+            botAnswer.AppendLine($"Successfully deleted `{nbForbidden}` recipes that had forbidden characters in them.");
             await ReplyAsync(botAnswer.ToString());
         }
     }
