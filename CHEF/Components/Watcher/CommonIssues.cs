@@ -9,6 +9,21 @@ namespace CHEF.Components.Watcher
 {
     public class CommonIssues : Component
     {
+        public const string CrashLogLocation =
+            "You also mentioned the word `crash` in your message.\n" +
+            "Here is the file path for a log file that could be more useful to us :" +
+            @"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`\n" +
+            "or\n" +
+            @"`C:\Users\< UserName >\AppData\Local\Temp\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`";
+
+        public const string VersionMismatch = 
+            "If you are struggling playing with people in private lobbies:\n" +
+            "If you are using Steam Build ID mod or UnmoddedClients and that everyone have the mods, remove them.\n" +
+            "You don't need any kind of id build spoofing if everyone have the same modding setup.\n" +
+            "If you want to play with people that have the mods but also with people who doesnt. Proceed as follow :\n" +
+            "Open the in-game console and type this : `build_id_steam`, then invite people who are unmodded.\n" +
+            "Then, do the same with modded people, by typing : `build_id_mod`";
+
         public CommonIssues(DiscordSocketClient client) : base(client)
         {
         }
