@@ -37,7 +37,7 @@ namespace CHEF.Components.Commands.Cooking
             await ReplyAsync(botAnswer);
         }
 
-        private async Task ListRecipesInternal(string ownerName = null, int page = 1, string cmdName = null)
+        private async Task ListRecipesInternal(SocketUser owner = null, int page = 1, string cmdName = null)
         {
             if (page < 1)
                 page = 1;
@@ -48,7 +48,7 @@ namespace CHEF.Components.Commands.Cooking
 
             using (var context = new RecipeContext())
             {
-                (recipes, totalRecipeCount) = await context.GetRecipes(Context, cmdName, page - 1, ownerName);
+                (recipes, totalRecipeCount) = await context.GetRecipes(cmdName, page - 1, owner);
             }
             var embedBuilder = new EmbedBuilder();
             foreach (var recipe in recipes)
@@ -76,9 +76,9 @@ namespace CHEF.Components.Commands.Cooking
                 {
                     if (page == 1)
                     {
-                        noMatch = ownerName == null ? 
+                        noMatch = owner == null ? 
                             "Oh no ! My recipe book is empty... :(" : 
-                            $"No recipes found from an author named {ownerName}.";
+                            $"No recipes found from an author named {owner}.";
                     }
                     else
                     {
@@ -92,9 +92,9 @@ namespace CHEF.Components.Commands.Cooking
                     {
                         noMatch += $"on page {page}";
                     }
-                    if (ownerName != null)
+                    if (owner != null)
                     {
-                        noMatch += $" from an author named {ownerName}";
+                        noMatch += $" from an author named {owner}";
                     }
                 }
 
@@ -122,7 +122,7 @@ namespace CHEF.Components.Commands.Cooking
         [Alias("lu", "lsu")]
         public async Task ListUserRecipes(
             [Summary("Name of the recipe owner.")]
-            string ownerName,
+            SocketUser ownerName,
             [Summary("Optional page if multiple pages are returned.")]
             int page = 1,
             [Summary("Optional word to filter the search.")]

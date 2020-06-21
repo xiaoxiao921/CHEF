@@ -33,19 +33,16 @@ namespace CHEF.Components.Commands.Cooking
             await Recipes.AsQueryable()
                 .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(recipeName.ToLower()));
 
-        public async Task<(List<Recipe>, int)> GetRecipes(SocketCommandContext context, string nameFilter = null, int page = 0, string ownerName = null)
+        public async Task<(List<Recipe>, int)> GetRecipes(string nameFilter = null, int page = 0, SocketUser owner = null)
         {
             var query = Recipes.AsQueryable();
             if (nameFilter != null)
             {
                 query = query.Where(r => r.Name.ToLower().Contains(nameFilter.ToLower()));
             }
-            if (ownerName != null)
+            if (owner != null)
             {
-                var realOwnerNameQuery = query.ToList().Where(r => r.RealOwnerName(context.Guild).ToLower().Contains(ownerName.ToLower()));
-                var cachedNameQuery = query.Where(r => r.OwnerName.ToLower().Contains(ownerName.ToLower()));
-
-                query = realOwnerNameQuery.Count() >= cachedNameQuery.Count() ? realOwnerNameQuery.AsQueryable() : cachedNameQuery;
+                query = query.Where(r => r.OwnerId.Equals(owner.Id));
             }
             var totalNumberOfRecipes = await query.CountAsync();
 
