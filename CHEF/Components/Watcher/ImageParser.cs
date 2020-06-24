@@ -42,16 +42,14 @@ namespace CHEF.Components.Watcher
                         var botAnswer = new StringBuilder();
                         var queryResult = await QueryYandex(attachment.Url);
 
-                        Logger.Log("Checking for outdated mods.");
-                        var outdatedMods = await CommonIssues.CheckModsVersion(queryResult.ImageText);
-                        if (outdatedMods != null)
-                        {
-                            botAnswer.AppendLine(
-                                $"{msg.Author.Mention}, looks like you don't have the latest version installed of " +
-                                $"the following mod{(outdatedMods.Contains('\n') ? "s" : "")} :" + Environment.NewLine +
-                                outdatedMods);
+                        Logger.Log("Checking for common log errors.");
+                        CommonIssues.CheckCommonLogError(queryResult.ImageText, botAnswer, msg.Author);
 
-                            // Found mods, so its probably a console log that is screenshoted, lets add a tag so its for sure recognized
+                        Logger.Log("Checking for outdated mods.");
+                        var hasOutdatedMods = await CommonIssues.CheckModsVersion(queryResult.ImageText, botAnswer, msg.Author);
+                        if (hasOutdatedMods)
+                        {
+                            // Found mods, so its probably a console log that is screenshot, lets add a tag so its for sure recognized
                             // Todo: handle tags better directly
                             queryResult.HasModLoadingText = true;
                         }
@@ -61,7 +59,7 @@ namespace CHEF.Components.Watcher
                             queryResult.ImageText.Contains("Yours=MOD", StringComparison.InvariantCultureIgnoreCase))
                         {
                             botAnswer.AppendLine($"{msg.Author.Mention}, looks like you just uploaded a screenshot of a lobby game version mismatch.");
-                                botAnswer.AppendLine(CommonIssues.VersionMismatch);
+                            botAnswer.AppendLine(CommonIssues.VersionMismatch);
                             botAnswer.AppendLine("If the issue is something else, just wait for help.");
 
                             return botAnswer.ToString();

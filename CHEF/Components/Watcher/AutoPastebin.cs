@@ -40,14 +40,9 @@ namespace CHEF.Components.Watcher
                         var fileContent = await HttpClient.GetStringAsync(attachment.Url);
                         var botAnswer = new StringBuilder();
 
-                        var outdatedMods = await CommonIssues.CheckModsVersion(fileContent);
-                        if (outdatedMods != null)
-                        {
-                            botAnswer.AppendLine(
-                                $"{msg.Author.Mention}, looks like you don't have the latest version installed of " +
-                                $"the following mod{(outdatedMods.Contains('\n') ? "s" : "")} :" + Environment.NewLine +
-                                outdatedMods);
-                        }
+                        CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
+
+                        await CommonIssues.CheckModsVersion(fileContent, botAnswer, msg.Author);
 
                         var pasteResult = await PostBin(fileContent);
                         

@@ -9,6 +9,23 @@ namespace CHEF.Components.Watcher
 {
     public class CommonIssues : Component
     {
+        public const string DuplicateAssemblyError =
+            "You seems to have `Tried to load duplicate assembly...` error message." +
+            "When that happens, you should delete your " + 
+            @"Risk of Rain 2\Risk of Rain 2_Data\Managed folder " + 
+            "and verify the integrity of the game files\n" +
+            "http://steamcdn-a.akamaihd.net/steam/support/faq/verifygcf2.gif";
+
+        public const string R2APIMonoModPatchError =
+            "You seems to have `The Monomod patch of R2API seems to be missing` error message." +
+            "When that happens, it either means that : \n" +
+            "You are missing the .dll file like the message is saying,\n" +
+            "or\n" +
+            "You are missing the monomod loader that is normally located in the " + 
+            @"`Risk of Rain 2\BepInEx\patchers\BepInEx.MonoMod.Loader` folder.\n" +
+            "If you don't have this folder, please download BepInEx again from " + 
+            "the thunderstore and make sure to follow the installation instructions.";
+
         public const string CrashLogLocation =
             "You also mentioned the word `crash` in your message.\n" +
             "Here is the file path for a log file that could be more useful to us :" +
@@ -33,16 +50,37 @@ namespace CHEF.Components.Watcher
             return Task.CompletedTask;
         }
 
+        public static bool CheckCommonLogError(string text, StringBuilder answer, SocketUser author)
+        {
+            var hasCommonError = false;
+
+            if (text != null)
+            {
+                if (text.Contains("Tried to load duplicate", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    answer.AppendLine(DuplicateAssemblyError);
+                    hasCommonError = true;
+                }
+
+                if (text.Contains("The Monomod patch of", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    answer.AppendLine(R2APIMonoModPatchError);
+                    hasCommonError = true;
+                }
+            }
+
+            return hasCommonError;
+        }
+
         /// <summary>
-        /// Check if the <paramref name="text"/> contains version numbers of mods, if so,<para/>
-        /// check if their version number in the text is the latest by querying the thunderstore api.<para/>
-        /// Returns the latest version in the first string if <paramref name="text"/> doesn't already contains the latest version.<para/>
-        /// Second string is the version that is in the text.<para/>
-        /// Both strings are null if <paramref name="text"/> doesn't contains any mod version.
+        /// Check if the <paramref name="text"/> contains version numbers of mods<para/>
+        /// Returns true if the text contains any outdated mods
         /// </summary>
-        /// <param name="text">Text that may or may not contains mod version numbers.</param>
+        /// /// <param name="text">Text that may or may not contains mod version numbers</param>
+        /// <param name="answer">StringBuilder that will contains the bot answer ready to be sent</param>
+        /// /// <param name="author">User that we are answering to</param>
         /// <returns></returns>
-        public static async Task<string> CheckModsVersion(string text)
+        public static async Task<bool> CheckModsVersion(string text, StringBuilder answer, SocketUser author)
         {
             if (text != null)
             {
@@ -60,22 +98,33 @@ namespace CHEF.Components.Watcher
                         if (match.Groups.Count > 2)
                         {
                             var modName = match.Groups[1].ToString();
-                            var verFromText = match.Groups[2].ToString();
+                            var verFromText = match.Groups[2].ToString().Replace(" ", "");
                             Logger.Log("modName : " + modName);
                             Logger.Log("verFromText : " + verFromText);
                             var latestVer = await IsThisLatestModVersion(modName, verFromText);
                             if (latestVer != null)
                             {
-                                outdatedMods.AppendLine($"{modName} v{verFromText} instead of {latestVer}");
+                                outdatedMods.AppendLine($"{modName} v{verFromText} instead of v{latestVer}");
                             }
                         }
                     }
 
-                    return outdatedMods.Length > 0 ? outdatedMods.ToString() : null;
+                    if (outdatedMods.Length > 0)
+                    {
+                        var outdatedModsS = outdatedMods.ToString();
+                        answer.AppendLine(
+                            $"{author.Mention}, looks like you don't have the latest version installed of " +
+                            $"the following mod{(outdatedModsS.Contains('\n') ? "s" : "")} :" + Environment.NewLine +
+                            outdatedModsS);
+
+                        return true;
+                    }
+
+                    return false;
                 }
             }
 
-            return null;
+            return false;
         }
 
         /// <summary>
