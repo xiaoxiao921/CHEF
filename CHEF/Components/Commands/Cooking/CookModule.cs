@@ -146,7 +146,7 @@ namespace CHEF.Components.Commands.Cooking
         {
             var botAnswer = new StringBuilder("I can't cook ???");
 
-            if (text.Contains(':'))
+            if (cmdName.Contains(':'))
             {
                 botAnswer.Clear();
                 botAnswer.AppendLine("You can't have a recipe that has `:` in its name.");
