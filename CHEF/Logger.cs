@@ -33,7 +33,11 @@ namespace CHEF
 
             Console.WriteLine(log);
 
-            Task.Run(async () => { await _reportToUser.SendMessageAsync(log); });
+            // Disabled cause it seems to trigger rate limit too easily
+            // todo: log less or only communicate exceptions and such,
+            // todo: and make it requestable by direct messaging the bot
+            //
+            //Task.Run(async () => { await _reportToUser.SendMessageAsync(log); });
         }
 
         internal static void LogClassInit([CallerFilePath]string filePath = "")
