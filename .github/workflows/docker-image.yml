@@ -27,13 +27,9 @@ jobs:
     - name: Get the version
       id: vars
       run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10})
-    - name: Build the tagged Docker image
-      run: docker build . --file Docker/Dockerfile --tag xiaoxiao921/chef:${{steps.vars.outputs.tag}}
-    - name: Push the tagged Docker image
-      run: docker push xiaoxiao921/chef:${{steps.vars.outputs.tag}}
-    - name: Build the latest Docker image
-      run: docker build . --file Docker/Dockerfile --tag xiaoxiao921/chef:latest
-    - name: Push the latest Docker image
-      run: docker push xiaoxiao921/chef:latest
+    - name: Build the Docker image
+      run: docker build . --file Docker/Dockerfile --tag xiaoxiao921/chef:${{steps.vars.outputs.tag}} --tag xiaoxiao921/chef:latest
+    - name: Push the Docker image
+      run: docker push xiaoxiao921/chef
     - name: Notify Webhook
       run: curl -X POST ${{ secrets.NOTIFY_WEBHOOK }}
