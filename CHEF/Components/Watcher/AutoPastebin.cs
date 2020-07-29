@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using CHEF.Components.Commands.Ignore;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 
@@ -40,9 +41,14 @@ namespace CHEF.Components.Watcher
                         var fileContent = await HttpClient.GetStringAsync(attachment.Url);
                         var botAnswer = new StringBuilder();
 
-                        CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
-
-                        await CommonIssues.CheckModsVersion(fileContent, botAnswer, msg.Author);
+                        using (var context = new IgnoreContext())
+                        {
+                            if (!await context.IsIgnored(msg.Author))
+                            {
+                                CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
+                                await CommonIssues.CheckModsVersion(fileContent, botAnswer, msg.Author);
+                            }
+                        }
 
                         var pasteResult = await PostBin(fileContent);
                         
