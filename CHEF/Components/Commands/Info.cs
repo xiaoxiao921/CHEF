@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using CHEF.Components.Commands.Ignore;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -74,6 +75,20 @@ namespace CHEF.Components.Commands
 
                 await ReplyAsync(res);
             }
+        }
+
+        [Command("optout")]
+        [Summary("Opts the user out of automatic message scanning.")]
+        public async Task OptOut()
+        {
+            var user = Context.User;
+            using (var context = new IgnoreContext())
+            {
+                var ignore = new Ignore.Ignore();
+                ignore.discordId = user.Id;
+                context.Add(ignore);
+            }
+            await ReplyAsync("No longer scanning your messages.");
         }
 
         [Command("userinfo")]

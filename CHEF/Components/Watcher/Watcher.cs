@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CHEF.Components.Commands.Ignore;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 
 namespace CHEF.Components.Watcher
 {
@@ -17,6 +19,12 @@ namespace CHEF.Components.Watcher
 
         public override async Task SetupAsync()
         {
+            using (var context = new IgnoreContext())
+            {
+                await context.Database.MigrateAsync();
+                Logger.Log("Done migrating db.");
+            }
+
             Client.MessageReceived += MsgWatcherAsync;
 
             await Task.CompletedTask;
@@ -24,6 +32,12 @@ namespace CHEF.Components.Watcher
 
         private Task MsgWatcherAsync(SocketMessage msg)
         {
+            using (var context = new IgnoreContext())
+            {
+                if (context.IsIgnored(msg.Author))
+                    return Task.CompletedTask;
+            }
+        
             Task.Run(async () =>
             {
                 var pasteBinRes = await _autoPastebin.Try(msg);
