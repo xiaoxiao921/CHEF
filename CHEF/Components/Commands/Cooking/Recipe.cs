@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,10 +54,7 @@ namespace CHEF.Components.Commands.Cooking
             return (recipes, totalNumberOfRecipes);
         }
 
-        public int CountAll()
-        {
-            return Recipes.AsQueryable().Count();
-        }
+        public Task<int> CountAll() => Recipes.AsQueryable().CountAsync();
     }
 
     public class Recipe
@@ -80,6 +76,7 @@ namespace CHEF.Components.Commands.Cooking
         public bool IsOwner(SocketGuildUser user) => OwnerId == user.Id;
 
         public bool CanEdit(SocketGuildUser user) =>
-            IsOwner(user) || user.Roles.Any(role => PermissionSystem.HasRequiredPermission(role, PermissionLevel.Elevated));
+            IsOwner(user) ||
+            user.Roles.Any(role => PermissionSystem.HasRequiredPermission(role, PermissionLevel.Elevated));
     }
 }
