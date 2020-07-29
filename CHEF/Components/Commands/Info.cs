@@ -84,11 +84,40 @@ namespace CHEF.Components.Commands
             var user = Context.User;
             using (var context = new IgnoreContext())
             {
-                var ignore = new Ignore.Ignore();
-                ignore.discordId = user.Id;
-                context.Add(ignore);
+                bool alreadyIgnored = await context.IsIgnored(user);
+                if (alreadyIgnored)
+                {
+                    await ReplyAsync("I'm already ignoring you.");
+                }
+                else
+                {
+                    var ignore = new Ignore.Ignore { DiscordId = user.Id };
+                    context.Add(ignore);
+                    await context.SaveChangesAsync();
+                    await ReplyAsync("No longer scanning your messages.");
+                }
             }
-            await ReplyAsync("No longer scanning your messages.");
+        }
+
+        [Command("optin")]
+        [Summary("Opts the user in of automatic message scanning.")]
+        public async Task OptIn()
+        {
+            var user = Context.User;
+            using (var context = new IgnoreContext())
+            {
+                var ignored = await context.GetIgnore(user.Id);
+                if (ignored == null)
+                {
+                    await ReplyAsync("I wasn't ignoring you.");
+                }
+                else
+                {
+                    context.Remove(ignored);
+                    await context.SaveChangesAsync();
+                    await ReplyAsync("Scanning again your messages.");
+                }
+            }
         }
 
         [Command("userinfo")]
