@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CHEF.Components.Commands.Ignore;
 using Discord.WebSocket;
 using Google.Cloud.Vision.V1;
 using HtmlAgilityPack;
@@ -25,6 +26,14 @@ namespace CHEF.Components.Watcher
 
         internal async Task<string> Try(SocketMessage msg)
         {
+            using (var context = new IgnoreContext())
+            {
+                if (await context.IsIgnored(msg.Author))
+                {
+                    return default;
+                }
+            }
+
             if (msg is SocketUserMessage &&
                 msg.Channel is SocketTextChannel &&
                 !msg.Author.IsBot &&

@@ -22,7 +22,7 @@ namespace CHEF.Components.Watcher
             using (var context = new IgnoreContext())
             {
                 await context.Database.MigrateAsync();
-                Logger.Log("Done migrating db.");
+                Logger.Log("Done migrating ignore table.");
             }
 
             Client.MessageReceived += MsgWatcherAsync;
@@ -32,22 +32,16 @@ namespace CHEF.Components.Watcher
 
         private Task MsgWatcherAsync(SocketMessage msg)
         {
-            using (var context = new IgnoreContext())
-            {
-                if (context.IsIgnored(msg.Author))
-                    return Task.CompletedTask;
-            }
-        
             Task.Run(async () =>
             {
                 var pasteBinRes = await _autoPastebin.Try(msg);
 
-                if (pasteBinRes.Length > 1)
+                if (!string.IsNullOrEmpty(pasteBinRes))
                     await msg.Channel.SendMessageAsync(pasteBinRes);
 
                 var yandexRes = await _imageParser.Try(msg);
 
-                if (yandexRes.Length > 1)
+                if (!string.IsNullOrEmpty(yandexRes))
                     await msg.Channel.SendMessageAsync(yandexRes);
 
                 if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
@@ -55,6 +49,7 @@ namespace CHEF.Components.Watcher
                     await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
                 }
             });
+
             return Task.CompletedTask;
         }
     }
