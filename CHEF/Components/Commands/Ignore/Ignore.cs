@@ -27,26 +27,16 @@ namespace CHEF.Components.Commands.Ignore
 
         public async Task<Ignore> GetIgnore(ulong discordId) => 
             await UserIds.AsQueryable()
-                .FirstOrDefaultAsync(i => i.Equals(discordId));
+                .FirstOrDefaultAsync(i => i.DiscordId == discordId);
 
 
         public async Task<bool> IsIgnored(SocketUser user) =>
-            await UserIds.AsQueryable().AnyAsync(i => i.Equals(user));
+            await UserIds.AsQueryable().AnyAsync(i => i.DiscordId == user.Id);
     }
 
     public class Ignore
     {
         [Key]
         public ulong DiscordId { get; set; }
-
-        public bool Equals(ulong discordId)
-        {
-            return DiscordId == discordId;
-        }
-
-        public bool Equals(SocketUser user)
-        {
-            return DiscordId == user.Id;
-        }
     }
 }
