@@ -18,7 +18,7 @@ namespace CHEF.Components.Commands.Cooking
             using (var context = new RecipeContext())
             {
                 await context.Database.MigrateAsync();
-                Logger.Log("Done migrating db.");
+                Logger.Log("Done migrating recipe table.");
             }
 
             Client.MessageReceived += RecipeShortcutAsync;
