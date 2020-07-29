@@ -18,18 +18,18 @@ namespace CHEF.Components.Watcher
 
         public const string R2APIMonoModPatchError =
             "You seems to have `The Monomod patch of R2API seems to be missing` error message." +
-            "When that happens, it either means that : \n" +
+            "When that happens, it either means that :\n" +
             "You are missing the .dll file like the message is saying,\n" +
             "or\n" +
             "You are missing the monomod loader that is normally located in the " + 
-            @"`Risk of Rain 2\BepInEx\patchers\BepInEx.MonoMod.Loader` folder.\n" +
+            @"`Risk of Rain 2\BepInEx\patchers\BepInEx.MonoMod.Loader` folder." + "\n" + 
             "If you don't have this folder, please download BepInEx again from " + 
             "the thunderstore and make sure to follow the installation instructions.";
 
         public const string CrashLogLocation =
             "You also mentioned the word `crash` in your message.\n" +
             "Here is the file path for a log file that could be more useful to us :" +
-            @"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`\n" +
+            @"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`" + "\n" + 
             "or\n" +
             @"`C:\Users\< UserName >\AppData\Local\Temp\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`";
 
@@ -99,12 +99,20 @@ namespace CHEF.Components.Watcher
                         {
                             var modName = match.Groups[1].ToString();
                             var verFromText = match.Groups[2].ToString().Replace(" ", "");
-                            Logger.Log("modName : " + modName);
-                            Logger.Log("verFromText : " + verFromText);
-                            var latestVer = await IsThisLatestModVersion(modName, verFromText);
-                            if (latestVer != null)
+                            //Logger.Log("modName : " + modName);
+                            //Logger.Log("verFromText : " + verFromText);
+
+                            // todo : re-enable me when we have consistency
+                            // across manifest version and the version from the plugin / log
+
+                            if (modName.ToLower().Contains("r2api") ||
+                                modName.ToLower().Contains("bepin"))
                             {
-                                outdatedMods.AppendLine($"{modName} v{verFromText} instead of v{latestVer}");
+                                var latestVer = await IsThisLatestModVersion(modName, verFromText);
+                                if (latestVer != null)
+                                {
+                                    outdatedMods.AppendLine($"{modName} v{verFromText} instead of v{latestVer}");
+                                }
                             }
                         }
                     }
