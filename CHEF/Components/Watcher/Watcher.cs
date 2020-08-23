@@ -46,6 +46,7 @@ namespace CHEF.Components.Watcher
 
                 if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
                 {
+                    throw new Exception("Sentry Test2");
                     await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
                 }
             });
