@@ -119,6 +119,8 @@ namespace CHEF.Components.Watcher
                         }
                     }
 
+                    var badStuffInLog = false;
+
                     if (outdatedMods.Length > 0)
                     {
                         var outdatedModsS = outdatedMods.ToString();
@@ -127,6 +129,8 @@ namespace CHEF.Components.Watcher
                             $"{author.Mention}, looks like you don't have the latest version installed of " +
                             $"the following mod{(plural ? "s" : "")} :" + Environment.NewLine +
                             outdatedModsS);
+
+                        badStuffInLog = true;
                     }
 
                     if (deprecatedMods.Length > 0)
@@ -137,9 +141,11 @@ namespace CHEF.Components.Watcher
                             $"{author.Mention}, looks like you have {(plural ? "a" : "")} deprecated " +
                             $"mod{(plural ? "s" : "")} installed. Deprecated mods usually don't work :" + Environment.NewLine +
                             deprecatedModsS);
+
+                        badStuffInLog = true;
                     }
 
-                    return false;
+                    return badStuffInLog;
                 }
             }
 
