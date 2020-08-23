@@ -35,7 +35,7 @@ namespace CHEF.Components.Watcher
         {
             Task.Run(async () =>
             {
-                using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DNS")))
+                using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN")))
                 {
                     var pasteBinRes = await _autoPastebin.Try(msg);
 

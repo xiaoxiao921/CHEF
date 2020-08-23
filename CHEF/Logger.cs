@@ -18,7 +18,7 @@ namespace CHEF
         {
             var log = $"{LogPrefix} {msg}";
 
-            using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DNS")))
+            using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN")))
             {
                 Console.WriteLine(log);
                 SentrySdk.CaptureMessage(log);
