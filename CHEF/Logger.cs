@@ -21,6 +21,7 @@ namespace CHEF
             using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DNS")))
             {
                 Console.WriteLine(log);
+                SentrySdk.CaptureMessage(log);
             }
         }
 
