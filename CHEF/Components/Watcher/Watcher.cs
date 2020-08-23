@@ -35,28 +35,24 @@ namespace CHEF.Components.Watcher
         {
             Task.Run(async () =>
             {
-                var pasteBinRes = await _autoPastebin.Try(msg);
-
-                if (!string.IsNullOrEmpty(pasteBinRes))
-                    await msg.Channel.SendMessageAsync(pasteBinRes);
-
-                var yandexRes = await _imageParser.Try(msg);
-
-                if (!string.IsNullOrEmpty(yandexRes))
-                    await msg.Channel.SendMessageAsync(yandexRes);
-
-                if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
+                using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DNS")))
                 {
-                    await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
-                    try
+                    var pasteBinRes = await _autoPastebin.Try(msg);
+
+                    if (!string.IsNullOrEmpty(pasteBinRes))
+                        await msg.Channel.SendMessageAsync(pasteBinRes);
+
+                    var yandexRes = await _imageParser.Try(msg);
+
+                    if (!string.IsNullOrEmpty(yandexRes))
+                        await msg.Channel.SendMessageAsync(yandexRes);
+
+                    if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        throw new Exception("TestSentry3");
-                    }
-                    catch (Exception e)
-                    {
-                        SentrySdk.CaptureException(e);
+                        await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
                     }
                 }
+                
             });
 
             return Task.CompletedTask;
