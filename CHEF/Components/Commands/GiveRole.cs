@@ -30,6 +30,8 @@ namespace CHEF.Components.Commands
                     {
                         await gUser.AddRoleAsync(nsfwRole);
                     }
+
+                    await Context.Message.AddReactionAsync(new Emoji("✅"));
                 }
             }
             else
