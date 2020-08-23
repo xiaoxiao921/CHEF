@@ -33,13 +33,10 @@ namespace CHEF.Components.Watcher
             "or\n" +
             @"`C:\Users\< UserName >\AppData\Local\Temp\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`";
 
-        public const string VersionMismatch = 
+        public const string VersionMismatch =
             "If you are struggling playing with people in private lobbies:\n" +
             "If you are using Steam Build ID mod or UnmoddedClients and that everyone have the mods, remove them.\n" +
-            "You don't need any kind of id build spoofing if everyone have the same modding setup.\n" +
-            "If you want to play with people that have the mods but also with people who doesnt. Proceed as follow :\n" +
-            "Open the in-game console and type this : `build_id_steam`, then invite people who are unmodded.\n" +
-            "Then, do the same with modded people, by typing : `build_id_mod`";
+            "You don't need any kind of id build spoofing if everyone have the same modding setup.\n";
 
         public CommonIssues(DiscordSocketClient client) : base(client)
         {
@@ -87,6 +84,7 @@ namespace CHEF.Components.Watcher
                 if (text.Contains("loading [", StringComparison.InvariantCultureIgnoreCase))
                 {
                     var outdatedMods = new StringBuilder();
+                    var deprecatedMods = new StringBuilder();
 
                     const string regexFindVer = "Loading \\[(.*?) ([0-9].*?)]";
                     var rx = new Regex(regexFindVer,
@@ -108,10 +106,14 @@ namespace CHEF.Components.Watcher
                             if (modName.ToLower().Contains("r2api") ||
                                 modName.ToLower().Contains("bepin"))
                             {
-                                var latestVer = await IsThisLatestModVersion(modName, verFromText);
-                                if (latestVer != null)
+                                var (latestVer, isDeprecated) = await IsThisLatestModVersion(modName, verFromText);
+                                if (latestVer != null && !isDeprecated)
                                 {
                                     outdatedMods.AppendLine($"{modName} v{verFromText} instead of v{latestVer}");
+                                }
+                                else if (isDeprecated)
+                                {
+                                    deprecatedMods.AppendLine($"{modName}");
                                 }
                             }
                         }
@@ -120,12 +122,21 @@ namespace CHEF.Components.Watcher
                     if (outdatedMods.Length > 0)
                     {
                         var outdatedModsS = outdatedMods.ToString();
+                        var plural = outdatedModsS.Contains('\n');
                         answer.AppendLine(
                             $"{author.Mention}, looks like you don't have the latest version installed of " +
-                            $"the following mod{(outdatedModsS.Contains('\n') ? "s" : "")} :" + Environment.NewLine +
+                            $"the following mod{(plural ? "s" : "")} :" + Environment.NewLine +
                             outdatedModsS);
+                    }
 
-                        return true;
+                    if (deprecatedMods.Length > 0)
+                    {
+                        var deprecatedModsS = deprecatedMods.ToString();
+                        var plural = deprecatedModsS.Contains('\n');
+                        answer.AppendLine(
+                            $"{author.Mention}, looks like you have {(plural ? "a" : "")} deprecated " +
+                            $"mod{(plural ? "s" : "")} installed. Deprecated mods usually don't work :" + Environment.NewLine +
+                            deprecatedModsS);
                     }
 
                     return false;
@@ -136,22 +147,28 @@ namespace CHEF.Components.Watcher
         }
 
         /// <summary>
-        /// Check for the <paramref name="modName"/> if <paramref name="otherVer"/> is the latest version.<para/>
-        /// Returns the latest version as a string, null if <paramref name="otherVer"/> is the latest.
+        /// Check for the <paramref name="modName"/> if <paramref name="verFromText"/> is the latest version.<para/>
+        /// Returns the latest version as a string, null if <paramref name="verFromText"/> is the latest.
+        /// Second Tuple value is true if mod is deprecated.
         /// </summary>
         /// <param name="modName">Name of the mod to check</param>
-        /// <param name="otherVer">Text that should be equal to the mod version, outdated or not.</param>
+        /// <param name="verFromText">Text that should be equal to the mod version, outdated or not.</param>
         /// <returns></returns>
-        private static async Task<string> IsThisLatestModVersion(string modName, string otherVer)
+        private static async Task<(string, bool)> IsThisLatestModVersion(string modName, string verFromText)
         {
             var modInfo = await Thunderstore.GetModInfoV1(modName);
             if (modInfo != null)
             {
+                if (modInfo.IsDeprecated)
+                {
+                    return (null, true);
+                }
+
                 var latestVer = modInfo.LatestPackage().VersionNumber;
-                return !latestVer.Equals(otherVer) ? latestVer : null;
+                return !latestVer.Equals(verFromText) ? (latestVer, false) : (null, false);
             }
 
-            return null;
+            return (null, false);
         }
     }
 }
