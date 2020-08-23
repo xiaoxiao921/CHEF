@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -122,7 +123,7 @@ namespace CHEF.Components.Watcher
                     if (outdatedMods.Length > 0)
                     {
                         var outdatedModsS = outdatedMods.ToString();
-                        var plural = outdatedModsS.Contains('\n');
+                        var plural = outdatedModsS.Count(c => c == '\n') > 1;
                         answer.AppendLine(
                             $"{author.Mention}, looks like you don't have the latest version installed of " +
                             $"the following mod{(plural ? "s" : "")} :" + Environment.NewLine +
@@ -134,9 +135,9 @@ namespace CHEF.Components.Watcher
                     if (deprecatedMods.Length > 0)
                     {
                         var deprecatedModsS = deprecatedMods.ToString();
-                        var plural = deprecatedModsS.Contains('\n');
+                        var plural = deprecatedModsS.Count(c => c == '\n') > 1;
                         answer.AppendLine(
-                            $"{author.Mention}, looks like you have {(plural ? "a" : "")} deprecated " +
+                            $"{author.Mention}, looks like you have {(plural ? "" : "a")} deprecated " +
                             $"mod{(plural ? "s" : "")} installed. Deprecated mods usually don't work :" + Environment.NewLine +
                             deprecatedModsS);
 
