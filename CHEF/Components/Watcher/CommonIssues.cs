@@ -103,18 +103,16 @@ namespace CHEF.Components.Watcher
                             // todo : re-enable me when we have consistency
                             // across manifest version and the version from the plugin / log
 
-                            if (modName.ToLower().Contains("r2api") ||
-                                modName.ToLower().Contains("bepin"))
+                            var (latestVer, isDeprecated) = await IsThisLatestModVersion(modName, verFromText);
+                            if (latestVer != null && !isDeprecated && 
+                                (modName.ToLower().Contains("r2api") ||
+                                modName.ToLower().Contains("bepin")))
                             {
-                                var (latestVer, isDeprecated) = await IsThisLatestModVersion(modName, verFromText);
-                                if (latestVer != null && !isDeprecated)
-                                {
-                                    outdatedMods.AppendLine($"{modName} v{verFromText} instead of v{latestVer}");
-                                }
-                                else if (isDeprecated)
-                                {
-                                    deprecatedMods.AppendLine($"{modName}");
-                                }
+                                outdatedMods.AppendLine($"{modName} v{verFromText} instead of v{latestVer}");
+                            }
+                            else if (isDeprecated)
+                            {
+                                deprecatedMods.AppendLine($"{modName}");
                             }
                         }
                     }
