@@ -52,13 +52,13 @@ namespace CHEF.Components.Commands
         }
 
         public static SocketRole GetRefRole(SocketGuild guild, PermissionLevel level) =>
-            GuildRolePermissions[guild].RefRoleToPermissionLevel[(int)level];
+            GuildRolePermissions[guild].RolesPositionToPermissionLevel[(int)level];
 
         public class RolesPermissionLevel
         {
             private static readonly int PermissionLevelCount = Enum.GetNames(typeof(PermissionLevel)).Length;
 
-            public SocketRole[] RefRoleToPermissionLevel;
+            public SocketRole[] RolesPositionToPermissionLevel;
             public Dictionary<SocketRole, PermissionLevel> Roles { get; }
             public DateTime Timestamp { get; }
 
@@ -75,37 +75,38 @@ namespace CHEF.Components.Commands
                 }
             }
 
+            // rolesPositionReference are like landmark to determine the permissions level of other roles in the hierarchy.
             private void DefineRolesPositionsToPermLevels(SocketGuild guild)
             {
-                var refRoles = new SocketRole[PermissionLevelCount];
-                refRoles[0] = guild.EveryoneRole;
+                var rolesPositionReference = new SocketRole[PermissionLevelCount];
+                rolesPositionReference[0] = guild.EveryoneRole;
                 foreach (var role in guild.Roles)
                 {
-                    //todo: remove DefinedRoles and make this configurable at runtime instead
+                    // Todo: remove DefinedRoles and make this configurable at runtime instead
 
                     if (role.Name.Equals(DefinedRoles.ModDeveloper))
                     {
-                        refRoles[1] = role;
+                        rolesPositionReference[1] = role;
                         continue;
                     }
 
                     if (role.Name.Equals(DefinedRoles.CoreDeveloper))
                     {
-                        refRoles[2] = role;
+                        rolesPositionReference[2] = role;
                     }
                 }
-                RefRoleToPermissionLevel = refRoles;
+                RolesPositionToPermissionLevel = rolesPositionReference;
             }
 
             private PermissionLevel GetPermissionLevelFromRole(SocketRole role)
             {
                 var level = PermissionLevel.None;
 
-                for (var i = 0; i < RefRoleToPermissionLevel.Length; i++)
+                for (var i = 0; i < RolesPositionToPermissionLevel.Length; i++)
                 {
                     // Higher position value = Higher on the role hierarchy
 
-                    var refRole = RefRoleToPermissionLevel[i];
+                    var refRole = RolesPositionToPermissionLevel[i];
                     level = role.Position >= refRole.Position ? (PermissionLevel)i : level;
                 }
 
