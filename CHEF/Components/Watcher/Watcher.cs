@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CHEF.Components.Commands.Ignore;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Sentry;
 
 namespace CHEF.Components.Watcher
 {
@@ -46,8 +47,15 @@ namespace CHEF.Components.Watcher
 
                 if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    throw new Exception("Sentry Test2");
                     await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
+                    try
+                    {
+                        throw new Exception("TestSentry3");
+                    }
+                    catch (Exception e)
+                    {
+                        SentrySdk.CaptureException(e);
+                    }
                 }
             });
 
