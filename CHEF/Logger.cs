@@ -12,7 +12,6 @@ namespace CHEF
         internal static void Init()
         {
             Log("Logger Init");
-            TestSentry();
         }
 
         private static void TestSentry()
