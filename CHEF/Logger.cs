@@ -14,14 +14,6 @@ namespace CHEF
             Log("Logger Init");
         }
 
-        private static void TestSentry()
-        {
-            using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DNS")))
-            {
-                throw new Exception("Sentry Test");
-            }
-        }
-
         internal static void Log(string msg)
         {
             var log = $"{LogPrefix} {msg}";
