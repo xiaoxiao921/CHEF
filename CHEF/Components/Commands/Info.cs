@@ -11,6 +11,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using HtmlAgilityPack;
+using Newtonsoft.Json;
 
 namespace CHEF.Components.Commands
 {
@@ -167,7 +168,16 @@ namespace CHEF.Components.Commands
             [Summary("The mod to get info from")]
             string modName)
         {
-            var modInfo = await Thunderstore.GetModInfoV1(modName);
+            PackageV1 modInfo;
+            try
+            {
+                modInfo = await Thunderstore.GetModInfoV1(modName);
+            }
+            catch (JsonSerializationException)
+            {
+                await ReplyAsync("Couldn't retrieve mod information, API is probably down.");
+                return;
+            }
 
             if (modInfo == null)
             {
