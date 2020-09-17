@@ -31,7 +31,7 @@ namespace CHEF.Components.Commands
                         await gUser.AddRoleAsync(nsfwRole);
                     }
 
-                    await Context.Message.AddReactionAsync(new Emoji("✅"));
+                    await Context.Message.AddReactionAsync(Emote.Parse("<:KappaPride:570231271645511692>"));
                 }
             }
             else
