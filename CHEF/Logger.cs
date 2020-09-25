@@ -9,11 +9,6 @@ namespace CHEF
     {
         private const string LogPrefix = "[CHEF]";
 
-        internal static void Init()
-        {
-            Log("Logger Init");
-        }
-
         internal static void Log(string msg)
         {
             var log = $"{LogPrefix} {msg}";

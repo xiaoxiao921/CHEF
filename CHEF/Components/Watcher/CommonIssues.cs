@@ -98,10 +98,8 @@ namespace CHEF.Components.Watcher
                         {
                             var modName = match.Groups[1].ToString();
                             var verFromText = match.Groups[2].ToString().Replace(" ", "");
-                            //Logger.Log("modName : " + modName);
-                            //Logger.Log("verFromText : " + verFromText);
 
-                            // todo : re-enable me when we have consistency
+                            // todo : re-enable me for all plugins when we have consistency
                             // across manifest version and the version from the plugin / log
 
                             var (latestVer, isDeprecated) = await IsThisLatestModVersion(modName, verFromText);

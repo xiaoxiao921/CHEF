@@ -46,15 +46,11 @@ namespace CHEF.Components.Watcher
                     var fileType = System.IO.Path.GetExtension(attachment.Url);
                     if (fileType == ".png")
                     {
-                        Logger.Log("Preparing a query for Yandex.");
-
                         var botAnswer = new StringBuilder();
                         var queryResult = await QueryYandex(attachment.Url);
 
-                        Logger.Log("Checking for common log errors.");
                         CommonIssues.CheckCommonLogError(queryResult.ImageText, botAnswer, msg.Author);
 
-                        Logger.Log("Checking for outdated mods.");
                         var hasOutdatedMods = await CommonIssues.CheckModsVersion(queryResult.ImageText, botAnswer, msg.Author);
                         if (hasOutdatedMods)
                         {
@@ -63,7 +59,6 @@ namespace CHEF.Components.Watcher
                             queryResult.HasModLoadingText = true;
                         }
 
-                        Logger.Log("Checking if its a version mismatch problem");
                         if (queryResult.ImageText.Contains("version mismatch", StringComparison.InvariantCultureIgnoreCase) ||
                             queryResult.ImageText.Contains("Yours=MOD", StringComparison.InvariantCultureIgnoreCase))
                         {
@@ -74,7 +69,6 @@ namespace CHEF.Components.Watcher
                             return botAnswer.ToString();
                         }
 
-                        Logger.Log("Checking if its a console image");
                         if (queryResult.IsAConsole())
                         {
                             botAnswer.AppendLine($"{msg.Author.Mention}, looks like you just uploaded a screenshot of a BepinEx console / log file." +
@@ -95,7 +89,6 @@ namespace CHEF.Components.Watcher
                             return botAnswer.ToString();
                         }
 
-                        Logger.Log("Checking if its a window explorer image");
                         if (queryResult.IsWindowExplorer() && 
                             (queryResult.ImageText.Contains("bepin", StringComparison.InvariantCultureIgnoreCase) || 
                              queryResult.ImageText.Contains("risk of rain", StringComparison.InvariantCultureIgnoreCase)))
@@ -130,7 +123,6 @@ namespace CHEF.Components.Watcher
             var document = (await web.LoadFromWebAsync($"{_postUrl}{imageUrl}&rpt=imageview")).DocumentNode;
             var tags = document.SelectNodes("//*[@class=\"CbirItem CbirTags\"]//*[@class=\"Button2-Text\"]");
             res.AddTags(tags);
-            Logger.Log("Got the image tags.");
 
             // Catch any error in case the Cloud Vision Service is
             // not correctly setup : An exception will be thrown
@@ -138,8 +130,7 @@ namespace CHEF.Components.Watcher
             try
             {
                 var img = Image.FromUri(imageUrl);
-                res.AddText(CloudVisionOcr.AnnotatorClient.DetectText(img));
-                Logger.Log("Got the image text : " + res.ImageText);
+                res.AddText(await CloudVisionOcr.AnnotatorClient.DetectTextAsync(img));
             }
             catch (Exception e)
             {
@@ -149,7 +140,7 @@ namespace CHEF.Components.Watcher
             return res;
         }
 
-        public class YandexImageQuery
+        private class YandexImageQuery
         {
             private readonly List<string> _imageTags;
             public string ImageText { get; private set; }

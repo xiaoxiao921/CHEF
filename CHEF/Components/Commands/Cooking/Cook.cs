@@ -18,7 +18,6 @@ namespace CHEF.Components.Commands.Cooking
             using (var context = new RecipeContext())
             {
                 await context.Database.MigrateAsync();
-                Logger.Log("Done migrating recipe table.");
             }
 
             Client.MessageReceived += RecipeShortcutAsync;
@@ -48,6 +47,7 @@ namespace CHEF.Components.Commands.Cooking
                         var guild = (msg.Channel as SocketGuildChannel)?.Guild;
                         await msg.Channel.SendMessageAsync(
                             $"**Recipe: {recipe.Name} (Owner: {recipe.RealOwnerName(guild)})**{Environment.NewLine}{recipe.Text}");
+
                         Logger.Log($"[{DateTime.UtcNow}] Recipe {recipe.Name} was executed by {msg.Author}.");
                     }
                 }

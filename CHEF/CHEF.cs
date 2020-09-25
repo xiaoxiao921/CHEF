@@ -25,7 +25,6 @@ namespace CHEF
 
         private async Task InitOnClientReady()
         {
-            Logger.Init();
             await Task.CompletedTask;
         }
 

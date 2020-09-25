@@ -340,7 +340,6 @@ namespace CHEF.Components.Commands.Cooking
 
                 foreach (var duplicate in duplicates)
                 {
-                    Logger.Log("duplicate recipe : " + duplicate.Name);
                     nameOfRecipesToRemove.Add(duplicate.Name);
                 }
 
@@ -370,7 +369,6 @@ namespace CHEF.Components.Commands.Cooking
 
                 foreach (var forbidden in forbiddens)
                 {
-                    Logger.Log("forbidden recipe : " + forbidden.Name);
                     recipesToRemove.Add(forbidden);
                 }
 

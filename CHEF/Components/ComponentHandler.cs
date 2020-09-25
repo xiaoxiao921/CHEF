@@ -13,16 +13,17 @@ namespace CHEF.Components
 
         internal static async Task Init(DiscordSocketClient client)
         {
+            LoadedComponents.Clear();
+
             var componentTypes = Assembly.GetExecutingAssembly().GetTypes().Where(ComponentFilter).ToList();
 
             foreach (var componentType in componentTypes)
             {
                 try
                 {
-                    Logger.Log($"Enabling Component: {componentType.Name}");
-
                     var compInstance = (Component)Activator.CreateInstance(componentType, client);
                     await compInstance.SetupAsync();
+                    LoadedComponents.Add(compInstance);
                 }
                 catch (Exception e)
                 {

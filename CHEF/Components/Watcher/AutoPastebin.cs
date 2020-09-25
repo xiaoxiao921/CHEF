@@ -58,11 +58,6 @@ namespace CHEF.Components.Watcher
                                 $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: {pasteResult.FullUrl}");
                             return botAnswer.ToString();
                         }
-                        else
-                        {
-                            Logger.Log(
-                                $"Failed to make pastebin for {msg.Author.Username} {attachment.Filename}, size: {attachment.Size}. HTTP Error code {pasteResult.StatusCode}");
-                        }
                     }
                 }
             }
