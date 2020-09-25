@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CHEF.Components.Commands.Ignore;
+using CHEF.Extensions;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Sentry;
@@ -23,7 +26,6 @@ namespace CHEF.Components.Watcher
             using (var context = new IgnoreContext())
             {
                 await context.Database.MigrateAsync();
-                Logger.Log("Done migrating ignore table.");
             }
 
             Client.MessageReceived += MsgWatcherAsync;
@@ -42,12 +44,12 @@ namespace CHEF.Components.Watcher
                     if (!string.IsNullOrEmpty(pasteBinRes))
                         await msg.Channel.SendMessageAsync(pasteBinRes);
 
-                    var yandexRes = await _imageParser.Try(msg);
+                    var yandexRes = await _imageParser.Try(msg).WithTimeout(TimeSpan.FromSeconds(10), CancellationToken.None);
 
                     if (!string.IsNullOrEmpty(yandexRes))
                         await msg.Channel.SendMessageAsync(yandexRes);
 
-                    if (msg.Content.Contains("can i ask", StringComparison.InvariantCultureIgnoreCase))
+                    if (msg.Content.Length < 26 && ContainsAny("can i ask", "can someone help", "can anyone help"))
                     {
                         await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
                     }
@@ -56,6 +58,16 @@ namespace CHEF.Components.Watcher
             });
 
             return Task.CompletedTask;
+        }
+
+        private static bool ContainsAny(string text, params string[] testStrings)
+        {
+            return testStrings.Any(testStr => text.Contains(testStr, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        private static bool ContainsAll(string text, params string[] testStrings)
+        {
+            return testStrings.All(testStr => text.Contains(testStr, StringComparison.InvariantCultureIgnoreCase));
         }
     }
 }
