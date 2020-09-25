@@ -14,29 +14,57 @@ namespace CHEF.Components.Commands
             [Summary("The role you want to give / remove access to.")]
             string roleName)
         {
-            if (roleName == "nsfw")
+            var user = Context.User;
+            roleName = roleName.ToLowerInvariant();
+
+            if (user is IGuildUser gUser)
             {
-                var user = Context.User;
-                var nsfwRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
-                var nsfwRoleId = nsfwRole?.Id;
-
-                if (user is IGuildUser gUser && nsfwRoleId != null)
+                if (roleName == "nsfw")
                 {
-                    if (gUser.RoleIds.Any(id => id == nsfwRoleId))
-                    {
-                        await gUser.RemoveRoleAsync(nsfwRole);
-                    }
-                    else
-                    {
-                        await gUser.AddRoleAsync(nsfwRole);
-                    }
+                    var nsfwRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
+                    var nsfwRoleId = nsfwRole?.Id;
 
-                    await Context.Message.AddReactionAsync(Emote.Parse("<:KappaPride:570231271645511692>"));
+                    if (nsfwRoleId != null)
+                    {
+                        if (gUser.RoleIds.Any(id => id == nsfwRoleId))
+                        {
+                            await gUser.RemoveRoleAsync(nsfwRole);
+                        }
+                        else
+                        {
+                            await gUser.AddRoleAsync(nsfwRole);
+                        }
+
+                        await Context.Message.AddReactionAsync(Emote.Parse("<:KappaPride:570231271645511692>"));
+                    }
+                }
+                else if (roleName == "guinea pig" || roleName == "mod tester")
+                {
+                    var modTesterRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == "guinea pig / mod tester");
+                    var modTesterRoleId = modTesterRole?.Id;
+
+                    if (modTesterRoleId != null)
+                    {
+                        if (gUser.RoleIds.Any(id => id == modTesterRoleId))
+                        {
+                            await gUser.RemoveRoleAsync(modTesterRole);
+                        }
+                        else
+                        {
+                            await gUser.AddRoleAsync(modTesterRole);
+                        }
+
+                        await Context.Message.AddReactionAsync(new Emoji("✅"));
+                    }
+                }
+                else
+                {
+                    await Context.Channel.SendMessageAsync("Can only give/remove nsfw or the mod tester role for now.");
                 }
             }
             else
             {
-                await Context.Channel.SendMessageAsync("Can only give/remove nsfw role for now.");
+                await Context.Channel.SendMessageAsync("Just tried to give a role to someone who is not in the server.");
             }
         }
     }
