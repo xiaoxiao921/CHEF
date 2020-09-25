@@ -12,7 +12,7 @@ namespace CHEF.Components.Commands
             ("Give / Remove the role given as first parameter to the user who called this command.")]
         public async Task GiveRole(
             [Summary("The role you want to give / remove access to.")]
-            string roleName)
+            [Remainder] string roleName)
         {
             var user = Context.User;
             roleName = roleName.ToLowerInvariant();
