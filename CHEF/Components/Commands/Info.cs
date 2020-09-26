@@ -175,7 +175,7 @@ namespace CHEF.Components.Commands
             }
             catch (JsonSerializationException)
             {
-                await ReplyAsync("Couldn't retrieve mod information, API is probably down.");
+                await ReplyAsync("Couldn't retrieve mod information, Thunderstore API is probably down.");
                 return;
             }
 
@@ -203,6 +203,30 @@ namespace CHEF.Components.Commands
             embedBuilder.AddField("Total downloads", modInfo.TotalDownloads(), true);
 
             await ReplyAsync("", false, embedBuilder.Build());
+        }
+
+        [Command("api")]
+        [Summary
+            ("Returns whether or not the thunderstore api is down.")]
+        [Alias("apidown")]
+        public async Task ThunderstoreAPIInfo()
+        {
+            PackageV1 modInfo;
+            try
+            {
+                modInfo = await Thunderstore.GetModInfoV1("bepin");
+            }
+            catch (JsonSerializationException)
+            {
+                await ReplyAsync("Couldn't retrieve mod information, Thunderstore API is probably down.");
+                return;
+            }
+
+            if (modInfo != null)
+            {
+                await ReplyAsync("The Thunderstore API seems to be up.");
+                return;
+            }
         }
 
         [Command("wiki")]
