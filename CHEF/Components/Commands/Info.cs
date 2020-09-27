@@ -175,7 +175,7 @@ namespace CHEF.Components.Commands
             }
             catch (JsonSerializationException)
             {
-                await ReplyAsync("Couldn't retrieve mod information, Thunderstore API is probably down.");
+                await ReplyAsync(Thunderstore.IsDownMessage);
                 return;
             }
 
@@ -218,14 +218,13 @@ namespace CHEF.Components.Commands
             }
             catch (JsonSerializationException)
             {
-                await ReplyAsync("Couldn't retrieve mod information, Thunderstore API is probably down.");
+                await ReplyAsync(Thunderstore.IsDownMessage);
                 return;
             }
 
             if (modInfo != null)
             {
-                await ReplyAsync("The Thunderstore API seems to be up.");
-                return;
+                await ReplyAsync(Thunderstore.IsUpMessage);
             }
         }
 
@@ -233,7 +232,7 @@ namespace CHEF.Components.Commands
         [Summary
             ("Returns info about wiki pages from the R2Wiki")]
         public async Task WikiSearch(
-            [Remainder] string search)
+            [Remainder] string search = "Home")
         {
             search = search.Trim();
             var encoded = WebUtility.UrlEncode(search);

@@ -87,6 +87,9 @@ namespace CHEF.Components.Commands
 
     public static class Thunderstore
     {
+        public const string IsDownMessage = "Couldn't retrieve mod information, Thunderstore API is down. (Try again in 5-10 minutes)";
+        public const string IsUpMessage = "The Thunderstore API is up.";
+
         public static async Task<PackageV1> GetModInfoV1(string modName)
         {
             using (var httpClient = new HttpClient())
