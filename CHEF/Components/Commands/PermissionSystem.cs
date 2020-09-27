@@ -87,10 +87,8 @@ namespace CHEF.Components.Commands
                     if (role.Name.Equals(DefinedRoles.ModDeveloper))
                     {
                         rolesPositionReference[1] = role;
-                        continue;
                     }
-
-                    if (role.Name.Equals(DefinedRoles.CoreDeveloper))
+                    else if (role.Name.Equals(DefinedRoles.CoreDeveloper))
                     {
                         rolesPositionReference[2] = role;
                     }
