@@ -194,6 +194,13 @@ namespace CHEF.Components.Commands.Cooking
                 return;
             }
 
+            var realOwnerName = Context.User.ToString();
+            var isUnderLimit = await CheckRecipeLengthUnderLimitAsync(cmdName, realOwnerName, text);
+            if (!isUnderLimit)
+            {
+                return;
+            }
+
             using (var context = new RecipeContext())
             {
                 await context.Recipes.AddAsync(new Recipe
@@ -267,14 +274,34 @@ namespace CHEF.Components.Commands.Cooking
                     return;
                 }
 
-                existingRecipe.Text = text;
-                await context.SaveChangesAsync();
-            }
-            
+                var realOwnerName = existingRecipe.RealOwnerName(Context.Guild);
+                var isUnderLimit = await CheckRecipeLengthUnderLimitAsync(existingRecipe.Name, realOwnerName, text);
+                if (isUnderLimit)
+                {
+                    existingRecipe.Text = text;
+                    await context.SaveChangesAsync();
 
-            botAnswer.Clear();
-            botAnswer.AppendLine($"Successfully modified the cooking recipe called `{cmdName}`");
-            await ReplyAsync(botAnswer.ToString());
+                    botAnswer.Clear();
+                    botAnswer.AppendLine($"Successfully modified the cooking recipe called `{cmdName}`");
+                    await ReplyAsync(botAnswer.ToString());
+                }
+            }
+        }
+
+        private async Task<bool> CheckRecipeLengthUnderLimitAsync(string recipeName, string realOwnerName, string newRecipeText)
+        {
+            var textPreview = $"**Recipe: {recipeName} (Owner: {realOwnerName})**{Environment.NewLine}{newRecipeText}";
+            const int textLengthLimit = 2000;
+            if (textPreview.Length >= textLengthLimit)
+            {
+                await ReplyAsync($"The text length when the recipe will be shown will exceed {textLengthLimit} characters. " +
+                           $"Currently at {textPreview.Length}. " + 
+                           "Please reduce the text length.");
+
+                return false;
+            }
+
+            return true;
         }
 
         [Command("delete")]
