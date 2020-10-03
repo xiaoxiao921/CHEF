@@ -186,7 +186,9 @@ namespace CHEF.Components.Commands
             }
 
             var embedBuilder = new EmbedBuilder();
-            embedBuilder.WithColor(modInfo.IsDeprecated ? Color.Red : Color.Green);
+
+            var pinkColor = new Color(255, 20, 147);
+            embedBuilder.WithColor(modInfo.IsDeprecated ? Color.Red : modInfo.IsNsfw() ? pinkColor : Color.Green);
 
             embedBuilder.WithAuthor(modInfo.Owner);
             embedBuilder.WithTitle($"{modInfo.Name} v{modInfo.LatestPackage().VersionNumber}");
@@ -198,6 +200,8 @@ namespace CHEF.Components.Commands
             {
                 embedBuilder.AddField("DEPRECATED", "This mod is deprecated, it may not work correctly.");
             }
+
+            embedBuilder.AddField("Categories", string.Join(", ", modInfo.Categories));
 
             embedBuilder.AddField("Rating Score", modInfo.RatingScore, true);
             embedBuilder.AddField("Total downloads", modInfo.TotalDownloads(), true);

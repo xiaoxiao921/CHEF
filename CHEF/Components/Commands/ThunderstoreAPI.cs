@@ -39,11 +39,19 @@ namespace CHEF.Components.Commands
         [JsonProperty("is_deprecated")]
         public bool IsDeprecated { get; set; }
 
+        [JsonProperty("has_nsfw_content")]
+        public bool HasNsfwContent { get; set; }
+
+        [JsonProperty("categories")]
+        public string[] Categories { get; set; }
+
         [JsonProperty("versions")]
         public VersionV1[] Versions { get; set; }
 
         public VersionV1 LatestPackage() => Versions[0];
         public long TotalDownloads() => Versions.Sum(version => version.Downloads);
+        public bool IsNsfw() => HasNsfwContent || 
+                                Categories.Any(category => category.ToLowerInvariant().Contains("nsfw"));
     }
 
     public class VersionV1
@@ -64,7 +72,7 @@ namespace CHEF.Components.Commands
         public string VersionNumber { get; set; }
 
         [JsonProperty("dependencies")]
-        public string[] Dependencies { get; set; }
+        public object[] Dependencies { get; set; }
 
         [JsonProperty("download_url")]
         public Uri DownloadUrl { get; set; }
