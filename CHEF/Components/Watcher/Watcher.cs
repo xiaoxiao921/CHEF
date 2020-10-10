@@ -49,7 +49,7 @@ namespace CHEF.Components.Watcher
                     if (!string.IsNullOrEmpty(yandexRes))
                         await msg.Channel.SendMessageAsync(yandexRes);
 
-                    if (msg.Content.Length < 26 && ContainsAny("can i ask", "can someone help", "can anyone help"))
+                    if (msg.Content.Length < 26 && ContainsAny(msg.Content, "can i ask", "can someone help", "can anyone help"))
                     {
                         await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
                     }
