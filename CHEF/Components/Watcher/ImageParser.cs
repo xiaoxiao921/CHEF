@@ -131,7 +131,6 @@ namespace CHEF.Components.Watcher
             {
                 var img = Image.FromUri(imageUrl);
                 res.AddText(await CloudVisionOcr.AnnotatorClient.DetectTextAsync(img));
-                Logger.Log("Image Text : " + res.ImageText);
             }
             catch (Exception e)
             {

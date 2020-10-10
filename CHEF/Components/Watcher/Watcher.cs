@@ -44,7 +44,7 @@ namespace CHEF.Components.Watcher
                     if (!string.IsNullOrEmpty(pasteBinRes))
                         await msg.Channel.SendMessageAsync(pasteBinRes);
 
-                    var yandexRes = await _imageParser.Try(msg).WithTimeout(TimeSpan.FromSeconds(10), CancellationToken.None);
+                    var yandexRes = await _imageParser.Try(msg);//.WithTimeout(TimeSpan.FromSeconds(10), CancellationToken.None);
 
                     if (!string.IsNullOrEmpty(yandexRes))
                         await msg.Channel.SendMessageAsync(yandexRes);
