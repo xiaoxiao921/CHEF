@@ -106,7 +106,7 @@ namespace CHEF.Components.Commands
                 var apiResult =
                     JsonConvert.DeserializeObject<PackageV1[]>(await httpClient.GetStringAsync(apiUrl));
 
-                return apiResult.FirstOrDefault(package => package.Name.Contains(modName, StringComparison.InvariantCultureIgnoreCase));
+                return apiResult.FirstOrDefault(package => package.FullName.Contains(modName, StringComparison.InvariantCultureIgnoreCase));
             }
         }
     }
