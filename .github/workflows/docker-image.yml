@@ -28,6 +28,6 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Docker/Dockerfile --tag xiaoxiao921/chef:${{steps.vars.outputs.tag}} --tag xiaoxiao921/chef:latest
     - name: Push the Docker image
-      run: docker push xiaoxiao921/chef
+      run: docker push -a xiaoxiao921/chef
     - name: Notify Webhook
       run: curl -X POST ${{ secrets.NOTIFY_WEBHOOK }}
