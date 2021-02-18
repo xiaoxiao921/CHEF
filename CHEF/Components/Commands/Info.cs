@@ -116,7 +116,7 @@ namespace CHEF.Components.Commands
                 {
                     context.Remove(ignored);
                     await context.SaveChangesAsync();
-                    await ReplyAsync("Scanning again your messages.");
+                    await ReplyAsync("Scanning your messages again.");
                 }
             }
         }
