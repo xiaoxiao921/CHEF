@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/dotnet/core/runtime:2.1
 
-COPY /CHEF/publish/ App/
+RUN ls -la /
+COPY publish/ App/
 WORKDIR /App
 
 ENTRYPOINT ["dotnet", "CHEF.dll"]
