@@ -155,6 +155,24 @@ namespace CHEF.Components.Commands.Cooking
                 return;
             }
 
+            if (cmdName.Contains('\n'))
+            {
+                botAnswer.Clear();
+                botAnswer.AppendLine("You can't have a recipe that has new line in its name.");
+
+                await ReplyAsync(botAnswer.ToString());
+                return;
+            }
+
+            if (cmdName.Contains(' '))
+            {
+                botAnswer.Clear();
+                botAnswer.AppendLine("You can't have a recipe that has spaces in its name.");
+
+                await ReplyAsync(botAnswer.ToString());
+                return;
+            }
+
             Recipe existingRecipe;
             using (var context = new RecipeContext())
             {
@@ -177,7 +195,7 @@ namespace CHEF.Components.Commands.Cooking
 
             var allStaticCmdAliases = CommandHandler.Service.Commands.SelectMany(cmdInfo => cmdInfo.Aliases).ToList();
             allStaticCmdAliases.AddRange(MultBotCommands);
-            if (allStaticCmdAliases.Any(alias => alias.Equals(cmdName, StringComparison.InvariantCultureIgnoreCase)))
+            if (allStaticCmdAliases.Any(alias => cmdName.StartsWith(alias, StringComparison.InvariantCultureIgnoreCase)))
             {
                 botAnswer.Clear();
                 botAnswer.AppendLine($"A static command called `{cmdName}` already exists, you can't have a recipe called the same as one of those.");
@@ -393,6 +411,24 @@ namespace CHEF.Components.Commands.Cooking
                 var forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains(":"));
 
                 nbForbidden = forbiddens.Count();
+
+                foreach (var forbidden in forbiddens)
+                {
+                    recipesToRemove.Add(forbidden);
+                }
+
+                forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains("\n"));
+
+                nbForbidden += forbiddens.Count();
+
+                foreach (var forbidden in forbiddens)
+                {
+                    recipesToRemove.Add(forbidden);
+                }
+
+                forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains(" "));
+
+                nbForbidden += forbiddens.Count();
 
                 foreach (var forbidden in forbiddens)
                 {
