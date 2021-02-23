@@ -166,7 +166,7 @@ namespace CHEF.Components.Watcher
             /// <param name="entities"></param>
             public void AddText(IReadOnlyList<EntityAnnotation> entities)
             {
-                ImageText = entities[0].Description;
+                ImageText = entities.Count > 0 ? entities[0].Description : "";
             }
 
             public bool ContainTag(string tag) => _imageTags.Any(t => t.Contains(tag));
