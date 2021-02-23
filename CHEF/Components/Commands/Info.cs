@@ -203,7 +203,9 @@ namespace CHEF.Components.Commands
 
             if (modInfo.Categories != null)
             {
-                embedBuilder.AddField("Categories", string.Join(", ", modInfo.Categories));
+                var categoriesString = string.Join(", ", modInfo.Categories);
+                if (!string.IsNullOrEmpty(categoriesString))
+                    embedBuilder.AddField("Categories", categoriesString);
             }
 
             embedBuilder.AddField("Rating Score", modInfo.RatingScore, true);
