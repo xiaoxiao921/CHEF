@@ -173,6 +173,15 @@ namespace CHEF.Components.Commands.Cooking
                 return;
             }
 
+            if (string.IsNullOrEmpty(cmdName))
+            {
+                botAnswer.Clear();
+                botAnswer.AppendLine("You can't have a recipe that has no name.");
+
+                await ReplyAsync(botAnswer.ToString());
+                return;
+            }
+
             Recipe existingRecipe;
             using (var context = new RecipeContext())
             {
@@ -427,6 +436,15 @@ namespace CHEF.Components.Commands.Cooking
                 }
 
                 forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Contains(" "));
+
+                nbForbidden += forbiddens.Count();
+
+                foreach (var forbidden in forbiddens)
+                {
+                    recipesToRemove.Add(forbidden);
+                }
+
+                forbiddens = context.Recipes.AsQueryable().Where(r => r.Name.Length == 0);
 
                 nbForbidden += forbiddens.Count();
 
