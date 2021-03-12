@@ -7,13 +7,21 @@ namespace CHEF.Components.Commands
 {
     public class GiveRoleModule : ModuleBase<SocketCommandContext>
     {
+        private const string PossibleRolesMessage = "Can only give/remove nsfw or the mod tester role for now.";
+
         [Command("role")]
         [Summary
             ("Give / Remove the role given as first parameter to the user who called this command.")]
         public async Task GiveRole(
             [Summary("The role you want to give / remove access to.")]
-            [Remainder] string roleName)
+            [Remainder] string roleName = null)
         {
+            if (string.IsNullOrEmpty(roleName))
+            {
+                await Context.Channel.SendMessageAsync(PossibleRolesMessage);
+                return;
+            }
+
             var user = Context.User;
             roleName = roleName.ToLowerInvariant();
 
@@ -59,7 +67,7 @@ namespace CHEF.Components.Commands
                 }
                 else
                 {
-                    await Context.Channel.SendMessageAsync("Can only give/remove nsfw or the mod tester role for now.");
+                    await Context.Channel.SendMessageAsync(PossibleRolesMessage);
                 }
             }
             else
