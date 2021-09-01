@@ -7,12 +7,15 @@ using System.Threading.Tasks;
 
 namespace CHEF.Components.Commands
 {
+    [Group("spamignore")]
     public class SpamFilter : ModuleBase<SocketCommandContext>
     {
-        [Command("spamignoreadd")]
+        [Command("add")]
         [Summary("Adds a role to ignore list of a spam filter.")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
-        public async Task SpamIgnoreAdd([Summary("Name of a role")] string roleName)
+        public async Task SpamIgnoreAdd(
+            [Summary("Name of a role")]
+            [Remainder] string roleName = null)
         {
             var role = Context.Guild.Roles.FirstOrDefault(role => role.Name == roleName);
             if (role == null)
@@ -37,10 +40,13 @@ namespace CHEF.Components.Commands
             }
         }
 
-        [Command("spamignoreremove")]
+        [Command("remove")]
+        [Alias("rm")]
         [Summary("Removes a role from ignore list of a spam filter.")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
-        public async Task SpamIgnoreRemove([Summary("Name of a role")] string roleName)
+        public async Task SpamIgnoreRemove(
+            [Summary("Name of a role")]
+            [Remainder] string roleName = null)
         {
             var role = Context.Guild.Roles.FirstOrDefault(role => role.Name == roleName);
             if (role == null)
@@ -64,7 +70,8 @@ namespace CHEF.Components.Commands
             }
         }
 
-        [Command("spamignorelist")]
+        [Command("list")]
+        [Alias("l", "ls")]
         [Summary("Removes a role from ignore list of a spam filter.")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task SpamIgnoreList()
