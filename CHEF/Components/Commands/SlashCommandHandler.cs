@@ -80,9 +80,8 @@ namespace CHEF.Components.Commands
             }
         }
 
-        private static bool SlashCommandsFilter(Type type)
-        {
-            return type.IsSubclassOf(typeof(ISlashCommand));
-        }
+        private static bool SlashCommandsFilter(Type type) =>
+            typeof(ISlashCommand).IsAssignableFrom(type) &&
+            type != typeof(ISlashCommand);
     }
 }
