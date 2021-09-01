@@ -37,7 +37,7 @@ namespace CHEF
 
         private async Task SetupBotLogin()
         {
-            var config = new DiscordSocketConfig { MessageCacheSize = 100 };
+            var config = new DiscordSocketConfig { MessageCacheSize = 100, ExclusiveBulkDelete = true };
             _client = new DiscordSocketClient(config);
             _client.Log += Log;
 

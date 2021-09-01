@@ -7,6 +7,7 @@ using CHEF.Extensions;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Sentry;
+using CHEF.Components.Watcher.Spam;
 
 namespace CHEF.Components.Watcher
 {
@@ -14,16 +15,22 @@ namespace CHEF.Components.Watcher
     {
         private readonly AutoPastebin _autoPastebin;
         private readonly ImageParser _imageParser;
+        private readonly SpamFilter _spamFilter;
 
         public Watcher(DiscordSocketClient client) : base(client)
         {
             _autoPastebin = new AutoPastebin();
             _imageParser = new ImageParser();
+            _spamFilter = new SpamFilter();
         }
 
         public override async Task SetupAsync()
         {
             using (var context = new IgnoreContext())
+            {
+                await context.Database.MigrateAsync();
+            }
+            using (var context = new SpamIgnoreRolesContext())
             {
                 await context.Database.MigrateAsync();
             }
@@ -39,6 +46,11 @@ namespace CHEF.Components.Watcher
             {
                 using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN")))
                 {
+                    if (await _spamFilter.Try(msg))
+                    {
+                        return;
+                    }
+
                     var pasteBinRes = await _autoPastebin.Try(msg);
 
                     if (!string.IsNullOrEmpty(pasteBinRes))
