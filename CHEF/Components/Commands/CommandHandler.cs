@@ -50,7 +50,7 @@ namespace CHEF.Components.Commands
         {
             Task.Run(async () =>
             {
-                if (!(msg is SocketUserMessage message))
+                if (msg is not SocketUserMessage message)
                     return;
 
                 var argPos = 0;
