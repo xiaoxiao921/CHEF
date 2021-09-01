@@ -22,6 +22,13 @@ namespace CHEF.Components.Commands
             [Summary("The (optional) command name to get more detailed info from")]
             string cmdName = null)
         {
+            var currentChannel = Context.Channel.Id;
+            if (currentChannel != 723014139060027462)
+            {
+                await Context.Channel.SendMessageAsync($"Use `!help` in {MentionUtils.MentionChannel(currentChannel)}");
+                return;
+            }
+
             var commands = CommandHandler.Service.Commands.ToList();
             var embedBuilder = new EmbedBuilder();
 
