@@ -50,6 +50,8 @@ namespace CHEF.Components.Commands
 
             var slashCommands = Assembly.GetExecutingAssembly().GetTypes().Where(SlashCommandsFilter).ToList();
 
+            Logger.Log($"{slashCommands.Count} Slash Commands Total.");
+
             foreach (var slashCommandData in slashCommands)
             {
                 try
@@ -59,7 +61,7 @@ namespace CHEF.Components.Commands
                     if (instance.IsGlobal)
                     {
                         GlobalSlashCommands.Add(instance.Builder.Name, instance);
-
+                        Logger.Log("Adding slash command : " + instance.Builder.Name);
                         try
                         {
                             await Client.Rest.CreateGlobalCommand(instance.Builder.Build());
