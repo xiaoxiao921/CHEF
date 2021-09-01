@@ -11,7 +11,8 @@ namespace CHEF.Components.Commands
 
         [Command("role")]
         [Summary
-            ("Give / Remove the role given as first parameter to the user who called this command.")]
+            ("Give / Remove the role given as first parameter to the user who called this command. " +
+            PossibleRolesMessage)]
         public async Task GiveRole(
             [Summary("The role you want to give / remove access to.")]
             [Remainder] string roleName = null)
