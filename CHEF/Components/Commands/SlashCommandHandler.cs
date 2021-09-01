@@ -10,18 +10,25 @@ using Newtonsoft.Json;
 
 namespace CHEF.Components.Commands
 {
-    public interface ISlashCommand
+    public abstract class SlashCommand
     {
-        public bool IsGlobal { get; }
+        protected readonly DiscordSocketClient Client;
 
-        public SlashCommandBuilder Builder { get; }
+        protected SlashCommand(DiscordSocketClient client)
+        {
+            Client = client;
+        }
 
-        public Task Handle(SocketSlashCommand interaction);
+        public abstract bool IsGlobal { get; }
+
+        public abstract SlashCommandBuilder Builder { get; }
+
+        public abstract Task Handle(SocketSlashCommand interaction);
     }
 
     public class SlashCommandHandler : Component
     {
-        internal readonly Dictionary<string, ISlashCommand> GlobalSlashCommands = new ();
+        internal readonly Dictionary<string, SlashCommand> GlobalSlashCommands = new ();
 
         public SlashCommandHandler(DiscordSocketClient client) : base(client)
         {
@@ -52,19 +59,19 @@ namespace CHEF.Components.Commands
 
             Logger.Log($"{slashCommands.Count} Slash Commands Total.");
 
-            foreach (var slashCommandData in slashCommands)
+            foreach (var slashCommandDataType in slashCommands)
             {
                 try
                 {
-                    var instance = (ISlashCommand)Activator.CreateInstance(slashCommandData, Client);
+                    var slashCommandData = (SlashCommand)Activator.CreateInstance(slashCommandDataType, Client);
 
-                    if (instance.IsGlobal)
+                    if (slashCommandData.IsGlobal)
                     {
-                        GlobalSlashCommands.Add(instance.Builder.Name, instance);
-                        Logger.Log("Adding slash command : " + instance.Builder.Name);
+                        GlobalSlashCommands.Add(slashCommandData.Builder.Name, slashCommandData);
+                        Logger.Log("Adding slash command : " + slashCommandData.Builder.Name);
                         try
                         {
-                            await Client.Rest.CreateGlobalCommand(instance.Builder.Build());
+                            await Client.Rest.CreateGlobalCommand(slashCommandData.Builder.Build());
                         }
                         catch (ApplicationCommandException exception)
                         {
@@ -75,13 +82,13 @@ namespace CHEF.Components.Commands
                 }
                 catch (Exception e)
                 {
-                    Logger.Log($"Exception while trying to get the slash command data of {slashCommandData.Name} {Environment.NewLine} {e}");
+                    Logger.Log($"Exception while trying to get the slash command data of {slashCommandDataType.Name} {Environment.NewLine} {e}");
                 }
             }
         }
 
         private static bool SlashCommandsFilter(Type type) =>
-            typeof(ISlashCommand).IsAssignableFrom(type) &&
-            type != typeof(ISlashCommand);
+            typeof(SlashCommand).IsAssignableFrom(type) &&
+            type != typeof(SlashCommand);
     }
 }

@@ -79,14 +79,20 @@ namespace CHEF.Components.Commands
         }
     }
 
-    public class SlashGiveRole : ISlashCommand
+    public class SlashGiveRole : SlashCommand
     {
-        public bool IsGlobal => true;
+        public override bool IsGlobal => true;
 
         private const string Description = "Give / remove the listed roles.";
 
         private SlashCommandBuilder _builder;
-        public SlashCommandBuilder Builder
+
+        public SlashGiveRole(DiscordSocketClient client) : base(client)
+        {
+
+        }
+
+        public override SlashCommandBuilder Builder
         {
             get
             {
@@ -109,7 +115,7 @@ namespace CHEF.Components.Commands
             }
         }
 
-        public async Task Handle(SocketSlashCommand interaction)
+        public override async Task Handle(SocketSlashCommand interaction)
         {
             var role = (SocketRole)interaction.Data.Options.First().Value;
 
