@@ -1,12 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using Newtonsoft.Json;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace CHEF.Components.Commands
+namespace CHEF.Components
 {
-    using System;
-    using Newtonsoft.Json;
-
     public class PackageV1
     {
         [JsonProperty("name")]
