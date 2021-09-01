@@ -81,17 +81,16 @@ namespace CHEF.Components.Commands
 
     public class SlashGiveRole : SlashCommand
     {
-        public override bool IsGlobal => true;
-
-        private const string Description = "Give / remove the listed roles.";
-
-        private SlashCommandBuilder _builder;
-
         public SlashGiveRole(DiscordSocketClient client) : base(client)
         {
 
         }
 
+        public override bool IsGlobal => true;
+
+        private const string Description = "Give / remove the listed roles.";
+
+        private SlashCommandBuilder _builder;
         public override SlashCommandBuilder Builder
         {
             get
@@ -99,7 +98,7 @@ namespace CHEF.Components.Commands
                 if (_builder == null)
                 {
                     _builder = new SlashCommandBuilder()
-                        .WithName("role")
+                        .WithName("give-role")
                         .WithDescription(Description)
                         .AddOption(new SlashCommandOptionBuilder()
                             .WithName("roleName")
