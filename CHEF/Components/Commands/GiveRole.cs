@@ -106,7 +106,7 @@ namespace CHEF.Components.Commands
                             .WithRequired(true)
                             .AddChoice("nsfw", "nsfw")
                             .AddChoice("mod tester", "guinea pig / mod tester")
-                            .WithType(ApplicationCommandOptionType.Role));
+                            .WithType(ApplicationCommandOptionType.String));
                         //.AddOption("guinea pig / mod tester", ApplicationCommandOptionType.Role, "mod tester role", required: true);
                 }
 
@@ -116,9 +116,27 @@ namespace CHEF.Components.Commands
 
         public override async Task Handle(SocketSlashCommand interaction)
         {
-            var role = (SocketRole)interaction.Data.Options.First().Value;
+            var role = (string)interaction.Data.Options.First().Value;
 
-            await interaction.RespondAsync("ROLE : " + role.Name + " | " + role.ToString());
+            var user = (IGuildUser)interaction.User;
+            var guild = user.Guild;
+
+            var guildRole = guild.Roles.FirstOrDefault(x => x.Name == role);
+            var guildRoleId = guildRole?.Id;
+
+            if (guildRoleId != null)
+            {
+                if (user.RoleIds.Any(id => id == guildRoleId))
+                {
+                    await user.RemoveRoleAsync(guildRole);
+                }
+                else
+                {
+                    await user.AddRoleAsync(guildRole);
+                }
+
+                await interaction.RespondAsync("ROLE : " + role);
+            }
         }
     }
 }
