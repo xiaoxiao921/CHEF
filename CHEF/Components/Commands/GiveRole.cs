@@ -98,10 +98,10 @@ namespace CHEF.Components.Commands
                 if (_builder == null)
                 {
                     _builder = new SlashCommandBuilder()
-                        .WithName("give-role")
+                        .WithName("role")
                         .WithDescription(Description)
                         .AddOption(new SlashCommandOptionBuilder()
-                            .WithName("roleName")
+                            .WithName("rolename")
                             .WithDescription("The role you want to give / remove.")
                             .WithRequired(true)
                             .AddChoice("nsfw", "nsfw")
