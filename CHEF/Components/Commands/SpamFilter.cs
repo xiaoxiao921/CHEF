@@ -15,7 +15,7 @@ namespace CHEF.Components.Commands
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task SpamIgnoreAdd(
             [Summary("Name of a role")]
-            [Remainder] string roleName = null)
+            [Remainder] string roleName)
         {
             var role = Context.Guild.Roles.FirstOrDefault(role => role.Name == roleName);
             if (role == null)
@@ -46,7 +46,7 @@ namespace CHEF.Components.Commands
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task SpamIgnoreRemove(
             [Summary("Name of a role")]
-            [Remainder] string roleName = null)
+            [Remainder] string roleName)
         {
             var role = Context.Guild.Roles.FirstOrDefault(role => role.Name == roleName);
             if (role == null)
