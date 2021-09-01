@@ -292,7 +292,7 @@ namespace CHEF.Components.Commands.Cooking
                     return;
                 }
 
-                if (text.Equals(string.Empty))
+                if (string.IsNullOrWhiteSpace(text))
                 {
                     botAnswer.Clear();
                     botAnswer.AppendLine("You can't have a recipe that has no text.");
