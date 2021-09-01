@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 
 namespace CHEF.Components.Commands
 {
@@ -75,6 +76,44 @@ namespace CHEF.Components.Commands
             {
                 await Context.Channel.SendMessageAsync("Just tried to give a role to someone who is not in the server.");
             }
+        }
+    }
+
+    public class SlashGiveRole : ISlashCommand
+    {
+        public bool IsGlobal => true;
+
+        private const string Description = "Give / remove the listed roles.";
+
+        private SlashCommandBuilder _builder;
+        public SlashCommandBuilder Builder
+        {
+            get
+            {
+                if (_builder == null)
+                {
+                    _builder = new SlashCommandBuilder()
+                        .WithName("role")
+                        .WithDescription(Description)
+                        .AddOption(new SlashCommandOptionBuilder()
+                            .WithName("roleName")
+                            .WithDescription("The role you want to give / remove.")
+                            .WithRequired(true)
+                            .AddChoice("nsfw", "nsfw")
+                            .AddChoice("mod tester", "guinea pig / mod tester")
+                            .WithType(ApplicationCommandOptionType.Role));
+                        //.AddOption("guinea pig / mod tester", ApplicationCommandOptionType.Role, "mod tester role", required: true);
+                }
+
+                return _builder;
+            }
+        }
+
+        public async Task Handle(SocketSlashCommand interaction)
+        {
+            var role = (SocketRole)interaction.Data.Options.First().Value;
+
+            await interaction.RespondAsync("ROLE : " + role.Name + " | " + role.ToString());
         }
     }
 }
