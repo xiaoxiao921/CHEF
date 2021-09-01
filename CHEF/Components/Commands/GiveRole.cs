@@ -124,19 +124,27 @@ namespace CHEF.Components.Commands
             var guildRole = guild.Roles.FirstOrDefault(x => x.Name == role);
             var guildRoleId = guildRole?.Id;
 
+            var responseMessage = "Something went wrong.";
+
             if (guildRoleId != null)
             {
                 if (user.RoleIds.Any(id => id == guildRoleId))
                 {
                     await user.RemoveRoleAsync(guildRole);
+                    responseMessage = $"{role} role removed.";
                 }
                 else
                 {
                     await user.AddRoleAsync(guildRole);
+                    responseMessage = $"{role} role added.";
                 }
-
-                await interaction.RespondAsync("ROLE : " + role);
             }
+            else
+            {
+                responseMessage = $"the role {role} was not found.";
+            }
+
+            await interaction.RespondAsync(responseMessage, ephemeral: true);
         }
     }
 }
