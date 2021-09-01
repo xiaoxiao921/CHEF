@@ -107,7 +107,6 @@ namespace CHEF.Components.Commands
                             .AddChoice("nsfw", "nsfw")
                             .AddChoice("mod tester", "guinea pig / mod tester")
                             .WithType(ApplicationCommandOptionType.String));
-                        //.AddOption("guinea pig / mod tester", ApplicationCommandOptionType.Role, "mod tester role", required: true);
                 }
 
                 return _builder;
