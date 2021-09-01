@@ -23,9 +23,10 @@ namespace CHEF.Components.Commands
             string cmdName = null)
         {
             var currentChannel = Context.Channel.Id;
-            if (currentChannel != 723014139060027462)
+            const ulong botChannel = 723014139060027462;
+            if (currentChannel != botChannel)
             {
-                await Context.Channel.SendMessageAsync($"Use `!help` in {MentionUtils.MentionChannel(currentChannel)}");
+                await Context.Channel.SendMessageAsync($"Use `help` in {MentionUtils.MentionChannel(botChannel)}");
                 return;
             }
 
