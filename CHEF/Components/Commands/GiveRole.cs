@@ -125,6 +125,13 @@ namespace CHEF.Components.Commands
 
             var responseMessage = "Something went wrong.";
 
+            var embedBuilder = new EmbedBuilder()
+                .WithAuthor(user)
+                .WithTitle("Role")
+                .WithDescription(responseMessage)
+                .WithColor(Color.Green)
+                .WithCurrentTimestamp();
+
             if (guildRoleId != null)
             {
                 if (user.RoleIds.Any(id => id == guildRoleId))
@@ -143,7 +150,7 @@ namespace CHEF.Components.Commands
                 responseMessage = $"the role {role} was not found.";
             }
 
-            await interaction.RespondAsync(responseMessage, ephemeral: true);
+            await interaction.RespondAsync(embed: embedBuilder.Build(), ephemeral: true);
         }
     }
 }
