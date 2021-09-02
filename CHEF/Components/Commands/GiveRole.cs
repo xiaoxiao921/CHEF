@@ -123,12 +123,10 @@ namespace CHEF.Components.Commands
             var guildRole = guild.Roles.FirstOrDefault(x => x.Name == role);
             var guildRoleId = guildRole?.Id;
 
-            var responseMessage = "Something went wrong.";
-
             var embedBuilder = new EmbedBuilder()
                 .WithAuthor(user)
                 .WithTitle("Role")
-                .WithDescription(responseMessage)
+                .WithDescription("Something went wrong.")
                 .WithColor(Color.Green)
                 .WithCurrentTimestamp();
 
@@ -137,17 +135,17 @@ namespace CHEF.Components.Commands
                 if (user.RoleIds.Any(id => id == guildRoleId))
                 {
                     //await user.RemoveRoleAsync(guildRole);
-                    responseMessage = $"{role} role removed.";
+                    embedBuilder.Description = $"{role} role removed.";
                 }
                 else
                 {
                     //await user.AddRoleAsync(guildRole);
-                    responseMessage = $"{role} role added.";
+                    embedBuilder.Description = $"{role} role added.";
                 }
             }
             else
             {
-                responseMessage = $"the role {role} was not found.";
+                embedBuilder.Description = $"the role {role} was not found.";
             }
 
             await interaction.RespondAsync(embed: embedBuilder.Build(), ephemeral: true);
