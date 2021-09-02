@@ -134,12 +134,12 @@ namespace CHEF.Components.Commands
             {
                 if (user.RoleIds.Any(id => id == guildRoleId))
                 {
-                    //await user.RemoveRoleAsync(guildRole);
+                    await user.RemoveRoleAsync(guildRole);
                     embedBuilder.Description = $"{role} role removed.";
                 }
                 else
                 {
-                    //await user.AddRoleAsync(guildRole);
+                    await user.AddRoleAsync(guildRole);
                     embedBuilder.Description = $"{role} role added.";
                 }
             }
