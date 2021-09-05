@@ -151,26 +151,34 @@ namespace CHEF.Components.Watcher.Spam
 
                     if (info.count >= config.MessagesForAction)
                     {
+                        string auditReason = GetAuditActionReason(config, msg);
                         switch (config.ActionOnSpam)
                         {
                             case ActionOnSpam.Mute:
                                 var muteRole = guild.GetRole(config.MuteRoleId);
                                 if (muteRole == null)
                                 {
-                                    await guildUser.KickAsync("Mute role is not found kicking instead." + GetAuditActionReason(config, msg));
+                                    var logMsg = $"Mute role '{config.MuteRoleId}' was not found. Kicking instead. " + auditReason;
+                                    Logger.Log(logMsg);
+                                    await guildUser.KickAsync(logMsg);
                                 }
                                 else
                                 {
-                                    await guildUser.AddRoleAsync(config.MuteRoleId, new RequestOptions { AuditLogReason = GetAuditActionReason(config, msg) });
+                                    var logMsg = $"Adding mute role to {guildUser.Nickname} : {auditReason}";
+                                    await guildUser.AddRoleAsync(config.MuteRoleId, new RequestOptions { AuditLogReason = auditReason });
                                 }
                                 await DeleteUserMessages(guild, guildUser, config);
                                 break;
                             case ActionOnSpam.Kick:
-                                await guildUser.KickAsync(GetAuditActionReason(config, msg));
+                                Logger.Log($"Spam kick user {guildUser.Nickname} : {auditReason}");
+
+                                await guildUser.KickAsync(auditReason);
                                 await DeleteUserMessages(guild, guildUser, config);
                                 break;
                             case ActionOnSpam.Ban:
-                                await guild.AddBanAsync(author, 1, GetAuditActionReason(config, msg));
+                                Logger.Log($"Spam Ban user {guildUser.Nickname} : {auditReason}");
+
+                                await guild.AddBanAsync(author, 1, auditReason);
                                 break;
                         }
                         return true;
