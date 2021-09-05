@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace CHEF.Components.Commands
 {
     [Group("spamignore")]
-    public class SpamFilter : ModuleBase<SocketCommandContext>
+    public class SpamIgnore : ModuleBase<SocketCommandContext>
     {
         [Command("add")]
         [Summary("Adds a role to ignore list of a spam filter.")]
@@ -23,7 +23,7 @@ namespace CHEF.Components.Commands
                 await ReplyAsync($"Couldn't find role **{roleName}**.");
                 return;
             }
-            using (var context = new SpamIgnoreRolesContext())
+            using (var context = new SpamFilterContext())
             {
                 var ignore = await context.GetIgnore(role);
                 if (ignore != null)
@@ -54,7 +54,7 @@ namespace CHEF.Components.Commands
                 await ReplyAsync($"Couldn't find role **{roleName}**.");
                 return;
             }
-            using (var context = new SpamIgnoreRolesContext())
+            using (var context = new SpamFilterContext())
             {
                 var ignore = await context.GetIgnore(role);
                 if (ignore == null)
@@ -76,7 +76,7 @@ namespace CHEF.Components.Commands
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task SpamIgnoreList()
         {
-            using (var context = new SpamIgnoreRolesContext())
+            using (var context = new SpamFilterContext())
             {
                 var embedBuilder = new EmbedBuilder();
                 var stringBuilder = new StringBuilder();

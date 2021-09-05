@@ -30,7 +30,7 @@ namespace CHEF.Components.Watcher
             {
                 await context.Database.MigrateAsync();
             }
-            using (var context = new SpamIgnoreRolesContext())
+            using (var context = new SpamFilterContext())
             {
                 await context.Database.MigrateAsync();
             }
