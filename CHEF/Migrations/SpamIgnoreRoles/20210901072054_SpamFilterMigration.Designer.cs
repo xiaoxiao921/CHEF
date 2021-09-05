@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace CHEF.Migrations.SpamIgnoreRoles
 {
-    [DbContext(typeof(SpamIgnoreRolesContext))]
+    [DbContext(typeof(SpamFilterContext))]
     [Migration("20210901072054_SpamFilterMigration")]
     partial class SpamFilterMigration
     {

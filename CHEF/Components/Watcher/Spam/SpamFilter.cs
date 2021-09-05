@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,8 +14,6 @@ namespace CHEF.Components.Watcher.Spam
     {
         //For the purpose of this class doesn't matter what the key as long as it's the same one
         private static readonly byte[] md5Key = new byte[] { 1 };
-        private static readonly byte messagesForBan = 4;
-        private static readonly byte hashLifetimeInSeconds = 15;
 
         private readonly ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, ConcurrentDictionary<HashResult, HashInfo>>> hashes = new();
         private readonly Timer cleanUpTimer = new()
@@ -34,12 +33,17 @@ namespace CHEF.Components.Watcher.Spam
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CleanUpTimerElapsed(object sender, ElapsedEventArgs e)
+        private async void CleanUpTimerElapsed(object sender, ElapsedEventArgs e)
         {
             var now = DateTime.UtcNow;
             var usersToRemove = new List<ulong>();
             var hashesToRemove = new List<HashResult>();
 
+            SpamFilterConfig config;
+            using (var context = new SpamFilterContext())
+            {
+                config = await context.GetFilterConfig();
+            }
             try
             {
                 foreach (var guild in hashes)
@@ -49,12 +53,12 @@ namespace CHEF.Components.Watcher.Spam
                         var removeUser = false;
                         foreach (var hash in user.Value)
                         {
-                            if (hash.Value.count >= messagesForBan)
+                            if (hash.Value.count >= config.MessagesForAction)
                             {
                                 removeUser = true;
                                 break;
                             }
-                            if (hash.Value.lastUpdate.AddSeconds(hashLifetimeInSeconds) < now)
+                            if (hash.Value.lastUpdate.AddSeconds(config.MessageSecondsGap) < now)
                             {
                                 hashesToRemove.Add(hash.Key);
                             }
@@ -110,12 +114,14 @@ namespace CHEF.Components.Watcher.Spam
                 }
 
                 var guildUser = author as SocketGuildUser;
-                using (var context = new SpamIgnoreRolesContext())
+                SpamFilterConfig config;
+                using (var context = new SpamFilterContext())
                 {
                     if (await context.IsIgnored(guildUser.Roles))
                     {
                         return false;
                     }
+                    config = await context.GetFilterConfig();
                 }
 
                 using (var md5 = new HMACMD5(md5Key))
@@ -135,7 +141,7 @@ namespace CHEF.Components.Watcher.Spam
                     var userDict = guildDict.GetOrAdd(author.Id, CreateUserDict);
                     var info = userDict.GetOrAdd(hash, CreateHashInfo);
 
-                    if (info.lastUpdate.AddSeconds(hashLifetimeInSeconds) < DateTime.UtcNow)
+                    if (info.lastUpdate.AddSeconds(config.MessageSecondsGap) < DateTime.UtcNow)
                     {
                         info.count = 0;
                     }
@@ -143,9 +149,30 @@ namespace CHEF.Components.Watcher.Spam
                     info.count++;
                     info.lastUpdate = DateTime.UtcNow;
 
-                    if (info.count >= messagesForBan)
+                    if (info.count >= config.MessagesForAction)
                     {
-                        await guild.AddBanAsync(author, 1, $"Sending the same message {messagesForBan} times with less than {hashLifetimeInSeconds} seconds gap");
+                        switch (config.ActionOnSpam)
+                        {
+                            case ActionOnSpam.Mute:
+                                var muteRole = guild.GetRole(config.MuteRoleId);
+                                if (muteRole == null)
+                                {
+                                    await guildUser.KickAsync("Mute role is not found kicking instead." + GetAuditActionReason(config, msg));
+                                }
+                                else
+                                {
+                                    await guildUser.AddRoleAsync(config.MuteRoleId, new RequestOptions { AuditLogReason = GetAuditActionReason(config, msg) });
+                                }
+                                await DeleteUserMessages(guild, guildUser, config);
+                                break;
+                            case ActionOnSpam.Kick:
+                                await guildUser.KickAsync(GetAuditActionReason(config, msg));
+                                await DeleteUserMessages(guild, guildUser, config);
+                                break;
+                            case ActionOnSpam.Ban:
+                                await guild.AddBanAsync(author, 1, GetAuditActionReason(config, msg));
+                                break;
+                        }
                         return true;
                     }
                 }
@@ -155,6 +182,60 @@ namespace CHEF.Components.Watcher.Spam
                 Logger.Log(e.ToString());
             }
             return false;
+        }
+
+        /// <summary>
+        /// Deletes all user messages that currently in message cache
+        /// </summary>
+        /// <param name="guild"></param>
+        /// <param name="user"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        private async Task DeleteUserMessages(SocketGuild guild, SocketGuildUser user, SpamFilterConfig config)
+        {
+            foreach (var channel in guild.Channels)
+            {
+                if (channel is not SocketTextChannel socketChannel)
+                {
+                    continue;
+                }
+
+                var messages = new List<ulong>();
+                foreach (var message in socketChannel.GetCachedMessages())
+                {
+                    if (message.Author.Id == user.Id)
+                    {
+                        messages.Add(message.Id);
+                    }
+                }
+
+                try
+                {
+                    await socketChannel.DeleteMessagesAsync(messages);
+                }
+                catch (Exception e)
+                {
+                    Logger.Log(e.ToString());
+                }
+            }
+        }
+
+        private string GetAuditActionReason(SpamFilterConfig config, SocketMessage message)
+        {
+            var builder = new StringBuilder();
+            builder
+                .Append("Sending the same message ")
+                .Append(config.MessagesForAction)
+                .Append(" times with less than ")
+                .Append(config.MessageSecondsGap)
+                .AppendLine(" seconds gap.");
+
+            if (config.InlcudeMessageContentInLog)
+            {
+                builder.AppendLine("User's message:");
+                builder.AppendLine(message.Content);
+            }
+            return builder.ToString();
         }
 
         private ConcurrentDictionary<ulong, ConcurrentDictionary<HashResult, HashInfo>> CreateGuildDict(ulong key)
