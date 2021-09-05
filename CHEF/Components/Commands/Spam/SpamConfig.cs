@@ -78,15 +78,15 @@ namespace CHEF.Components.Commands.Spam
                         }
                         config.MessageSecondsGap = messageSecondsGap;
                         break;
-                    case "inlcudemessagecontentinlog":
+                    case "includemessagecontentinlog":
                         if (!bool.TryParse(value, out var includeMessageContentInLog))
                         {
                             if (!int.TryParse(value, out var includeMessageContentInLogInt) || (includeMessageContentInLogInt != 0 && includeMessageContentInLogInt != 1))
                             {
-                                await ReplyAsync($"Value should one of these values:\ntrue\nfalse\n1\n0");
+                                await ReplyAsync($"Value should be one of these values:\ntrue\nfalse\n1\n0");
                                 return;
                             }
-                            includeMessageContentInLog = includeMessageContentInLogInt == 1 ? true : false;
+                            includeMessageContentInLog = includeMessageContentInLogInt == 1;
                         }
                         config.IncludeMessageContentInLog = includeMessageContentInLog;
                         break;
