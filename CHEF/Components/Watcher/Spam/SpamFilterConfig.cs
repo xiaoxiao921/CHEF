@@ -10,6 +10,6 @@ namespace CHEF.Components.Watcher.Spam
         public ulong MuteRoleId { get; set; }
         public int MessagesForAction { get; set; }
         public int MessageSecondsGap { get; set; }
-        public bool InlcudeMessageContentInLog { get; set; }
+        public bool IncludeMessageContentInLog { get; set; }
     }
 }

@@ -27,7 +27,7 @@ namespace CHEF.Components.Commands.Spam
                 embedBuilder.AddField("MuteRole", muteRole?.Name ?? "<unset>");
                 embedBuilder.AddField(nameof(SpamFilterConfig.MessagesForAction), config.MessagesForAction.ToString());
                 embedBuilder.AddField(nameof(SpamFilterConfig.MessageSecondsGap), config.MessageSecondsGap.ToString());
-                embedBuilder.AddField(nameof(SpamFilterConfig.InlcudeMessageContentInLog), config.InlcudeMessageContentInLog.ToString());
+                embedBuilder.AddField(nameof(SpamFilterConfig.IncludeMessageContentInLog), config.IncludeMessageContentInLog.ToString());
                 await ReplyAsync("", false, embedBuilder.Build());
             }
         }
@@ -88,7 +88,7 @@ namespace CHEF.Components.Commands.Spam
                             }
                             includeMessageContentInLog = includeMessageContentInLogInt == 1 ? true : false;
                         }
-                        config.InlcudeMessageContentInLog = includeMessageContentInLog;
+                        config.IncludeMessageContentInLog = includeMessageContentInLog;
                         break;
                     default:
                         await ReplyAsync($"**{fieldName}** is not a valid field");

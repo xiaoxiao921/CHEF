@@ -230,7 +230,7 @@ namespace CHEF.Components.Watcher.Spam
                 .Append(config.MessageSecondsGap)
                 .AppendLine(" seconds gap.");
 
-            if (config.InlcudeMessageContentInLog)
+            if (config.IncludeMessageContentInLog)
             {
                 builder.AppendLine("User's message:");
                 builder.AppendLine(message.Content);

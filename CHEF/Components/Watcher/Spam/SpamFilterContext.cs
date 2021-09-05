@@ -49,7 +49,7 @@ namespace CHEF.Components.Watcher.Spam
                 ActionOnSpam = ActionOnSpam.Mute,
                 MessagesForAction = 4,
                 MessageSecondsGap = 15,
-                InlcudeMessageContentInLog = true,
+                IncludeMessageContentInLog = true,
                 MuteRoleId = 0,
             };
         }
