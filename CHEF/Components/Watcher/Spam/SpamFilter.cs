@@ -165,6 +165,7 @@ namespace CHEF.Components.Watcher.Spam
                                 else
                                 {
                                     var logMsg = $"Adding mute role to {guildUser.Nickname} : {auditReason}";
+                                    Logger.Log(logMsg);
                                     await guildUser.AddRoleAsync(config.MuteRoleId, new RequestOptions { AuditLogReason = auditReason });
                                 }
                                 await DeleteUserMessages(guild, guildUser, config);
