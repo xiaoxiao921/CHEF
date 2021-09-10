@@ -176,6 +176,7 @@ namespace CHEF.Components.Commands
             [Summary("The mod to get info from")]
             string modName)
         {
+            modName = modName.Replace(' ', '_');
             PackageV1 modInfo;
             try
             {
