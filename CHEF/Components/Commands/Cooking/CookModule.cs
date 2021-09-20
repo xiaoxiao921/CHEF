@@ -50,12 +50,31 @@ namespace CHEF.Components.Commands.Cooking
             {
                 (recipes, totalRecipeCount) = await context.GetRecipes(cmdName, page - 1, owner);
             }
+
+            var badRecipes = new List<Recipe>();
             var embedBuilder = new EmbedBuilder();
             foreach (var recipe in recipes)
             {
                 var recipeText = recipe.Text;
                 var recipeTextLength = recipeText.Length > descMaxLength ? descMaxLength : recipeText.Length;
-                embedBuilder.AddField($"{recipe.Name}", $"{recipeText.Substring(0, recipeTextLength)}");
+
+                try
+                {
+                    embedBuilder.AddField($"{recipe.Name}", $"{recipeText.Substring(0, recipeTextLength)}");
+                }
+                catch (Exception)
+                {
+                    badRecipes.Add(recipe);
+                }
+            }
+
+            using (var context = new RecipeContext())
+            {
+                context.RemoveRange(badRecipes);
+
+                await context.SaveChangesAsync();
+
+                Logger.Log($"Removed {badRecipes.Count} bad recipes.");
             }
 
             if (recipes.Count > 0)
