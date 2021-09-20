@@ -39,13 +39,14 @@ namespace CHEF.Components.Watcher.Spam
             var usersToRemove = new List<ulong>();
             var hashesToRemove = new List<HashResult>();
 
-            SpamFilterConfig config;
-            using (var context = new SpamFilterContext())
-            {
-                config = await context.GetFilterConfig();
-            }
             try
             {
+                SpamFilterConfig config;
+                using (var context = new SpamFilterContext())
+                {
+                    config = await context.GetFilterConfig();
+                }
+
                 foreach (var guild in hashes)
                 {
                     foreach (var user in guild.Value)
@@ -82,6 +83,10 @@ namespace CHEF.Components.Watcher.Spam
                         guild.Value.TryRemove(user, out _);
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex.ToString());
             }
             finally
             {
