@@ -68,13 +68,16 @@ namespace CHEF.Components.Commands.Cooking
                 }
             }
 
-            using (var context = new RecipeContext())
+            if (badRecipes.Count > 0)
             {
-                context.RemoveRange(badRecipes);
+                using (var context = new RecipeContext())
+                {
+                    context.RemoveRange(badRecipes);
 
-                await context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
 
-                Logger.Log($"Removed {badRecipes.Count} bad recipes.");
+                    Logger.Log($"Removed {badRecipes.Count} bad recipes.");
+                }
             }
 
             if (recipes.Count > 0)
