@@ -28,7 +28,7 @@ namespace CHEF.Components.Commands
 
     public class SlashCommandHandler : Component
     {
-        internal readonly Dictionary<string, SlashCommand> GlobalSlashCommands = new ();
+        internal readonly Dictionary<string, SlashCommand> GlobalSlashCommands = new();
 
         public SlashCommandHandler(DiscordSocketClient client) : base(client)
         {
@@ -82,7 +82,7 @@ namespace CHEF.Components.Commands
                 }
                 catch (Exception e)
                 {
-                    Logger.Log($"Exception while trying to get the slash command data of {slashCommandDataType.Name} {Environment.NewLine} {e}");
+                    Logger.Log($"Exception while trying to get the slash command data of {slashCommandDataType?.Name} {Environment.NewLine} {e}");
                 }
             }
         }
