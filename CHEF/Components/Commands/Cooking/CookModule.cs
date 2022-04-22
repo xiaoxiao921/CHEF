@@ -92,12 +92,12 @@ namespace CHEF.Components.Commands.Cooking
                 }
 
                 // todo https://discordnet.dev/guides/int_basics/message-components/responding-to-buttons.html
-                //var componentBuilder = new ComponentBuilder();
-                //componentBuilder.WithButton
+                var componentBuilder = new ComponentBuilder();
+                componentBuilder.WithButton("First", "customId", ButtonStyle.Success, null, null, true, 0);
 
                 var pageStr = $" *(Page:{page}/{totalPage})*";
                 var isFiltered = cmdName != null ? $" that contains `{cmdName}` in their name" : "";
-                await ReplyAsync($"Here's a list of recipes{isFiltered}{pageStr} : ", false, embedBuilder.Build());
+                await ReplyAsync($"Here's a list of recipes{isFiltered}{pageStr} : ", false, embedBuilder.Build(), component: componentBuilder.Build());
             }
             else
             {
