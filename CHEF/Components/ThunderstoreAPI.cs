@@ -1,8 +1,9 @@
 ﻿using System;
-using Newtonsoft.Json;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace CHEF.Components
 {
@@ -49,7 +50,7 @@ namespace CHEF.Components
 
         public VersionV1 LatestPackage() => Versions[0];
         public long TotalDownloads() => Versions.Sum(version => version.Downloads);
-        public bool IsNsfw() => HasNsfwContent || 
+        public bool IsNsfw() => HasNsfwContent ||
                                 Categories.Any(category => category.ToLowerInvariant().Contains("nsfw"));
     }
 
@@ -94,19 +95,37 @@ namespace CHEF.Components
 
     public static class Thunderstore
     {
+        private const string ApiUrl = "https://thunderstore.io/api/v1/package/";
+
         public const string IsDownMessage = "Couldn't retrieve mod information, Thunderstore API is down. (Try again in 5-10 minutes)";
         public const string IsUpMessage = "The Thunderstore API is up.";
 
+        private static readonly HttpClientHandler _httpClientHandler = new HttpClientHandler()
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+        };
+        private static readonly HttpClient _httpClient = new HttpClient(_httpClientHandler);
+
+        private static TimeSpan _cacheRefreshInterval = TimeSpan.FromMinutes(5);
+        private static DateTime _lastCacheTime;
+        private static PackageV1[] _packageCache = null;
+
         public static async Task<PackageV1> GetModInfoV1(string modName)
         {
-            using (var httpClient = new HttpClient())
+            var timeNow = DateTime.Now;
+            if (_packageCache == null || timeNow - _lastCacheTime >= _cacheRefreshInterval)
             {
-                const string apiUrl = "https://thunderstore.io/api/v1/package/";
-                var apiResult =
-                    JsonConvert.DeserializeObject<PackageV1[]>(await httpClient.GetStringAsync(apiUrl));
-
-                return apiResult.FirstOrDefault(package => package.FullName.Contains(modName, StringComparison.InvariantCultureIgnoreCase));
+                _packageCache = JsonConvert.DeserializeObject<PackageV1[]>(await _httpClient.GetStringAsync(ApiUrl));
+                _lastCacheTime = timeNow;
             }
+
+            var mod = _packageCache.FirstOrDefault(package => package.Name.Contains(modName, StringComparison.InvariantCultureIgnoreCase));
+            if (mod == null)
+            {
+                mod = _packageCache.FirstOrDefault(package => package.FullName.Contains(modName, StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            return mod;
         }
     }
 }
