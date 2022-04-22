@@ -22,12 +22,15 @@ namespace CHEF.Components.Commands
             [Summary("The (optional) command name to get more detailed info from")]
             string cmdName = null)
         {
-            var currentChannel = Context.Channel.Id;
-            const ulong botChannel = 723014139060027462;
-            if (currentChannel != botChannel)
+            if (Context.Guild != null)
             {
-                await Context.Channel.SendMessageAsync($"Use `help` in {MentionUtils.MentionChannel(botChannel)}");
-                return;
+                var currentChannel = Context.Channel.Id;
+                const ulong botChannel = 723014139060027462;
+                if (currentChannel != botChannel)
+                {
+                    await Context.Channel.SendMessageAsync($"Use `help` in {MentionUtils.MentionChannel(botChannel)}");
+                    return;
+                }
             }
 
             var commands = CommandHandler.Service.Commands.ToList();
@@ -36,7 +39,7 @@ namespace CHEF.Components.Commands
             commands.Remove(commands.Single(command => command.Name.Equals("help")));
             if (cmdName == null)
             {
-                foreach (CommandInfo command in commands)
+                foreach (var command in commands)
                 {
                     string embedFieldText;
                     if (command.Summary == null)
@@ -93,7 +96,7 @@ namespace CHEF.Components.Commands
             var user = Context.User;
             using (var context = new IgnoreContext())
             {
-                bool alreadyIgnored = await context.IsIgnored(user);
+                var alreadyIgnored = await context.IsIgnored(user);
                 if (alreadyIgnored)
                 {
                     await ReplyAsync("I'm already ignoring you.");
@@ -160,10 +163,14 @@ namespace CHEF.Components.Commands
             foreach (var role in userInfo.Roles)
             {
                 if (!role.IsEveryone)
+                {
                     roles.Append(role.Mention);
+                }
             }
             if (roles.Length > 1)
+            {
                 embedBuilder.AddField("Roles", roles);
+            }
 
             await ReplyAsync("", false, embedBuilder.Build());
         }
@@ -174,7 +181,7 @@ namespace CHEF.Components.Commands
         [Alias("mod")]
         public async Task ModInfo(
             [Summary("The mod to get info from")]
-            string modName)
+            [Remainder] string modName)
         {
             modName = modName.Replace(' ', '_');
             PackageV1 modInfo;
@@ -214,11 +221,16 @@ namespace CHEF.Components.Commands
             {
                 var categoriesString = string.Join(", ", modInfo.Categories);
                 if (!string.IsNullOrEmpty(categoriesString))
+                {
                     embedBuilder.AddField("Categories", categoriesString);
+                }
             }
 
             embedBuilder.AddField("Rating Score", modInfo.RatingScore, true);
             embedBuilder.AddField("Total downloads", modInfo.TotalDownloads(), true);
+
+            embedBuilder.WithFooter(new EmbedFooterBuilder { Text = "Last updated:" });
+            embedBuilder.WithTimestamp(modInfo.LatestPackage().DateCreated);
 
             await ReplyAsync("", false, embedBuilder.Build());
         }
@@ -258,7 +270,7 @@ namespace CHEF.Components.Commands
 
             var web = new HtmlWeb();
             var document = (await web.LoadFromWebAsync(url)).DocumentNode;
-            
+
             var wikiResultsParent = document.SelectSingleNode("//div[@id=\"wiki_search_results\"]");
             if (wikiResultsParent != null)
             {
@@ -266,7 +278,7 @@ namespace CHEF.Components.Commands
                     document.SelectSingleNode(
                         "//div[@class=\"d-flex flex-column flex-md-row flex-justify-between border-bottom pb-3 position-relative\"]/h3");
                 var nbOfResult = Regex.Replace(
-                    nbOfResultQuery.FirstChild.GetDirectInnerText(), @"[^\d]", "", 
+                    nbOfResultQuery.FirstChild.GetDirectInnerText(), @"[^\d]", "",
                     RegexOptions.Compiled);
 
                 var wikiResult =
