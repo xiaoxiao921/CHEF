@@ -33,14 +33,16 @@ namespace CHEF.Components.Commands.Cooking
             var botAnswer = recipe == null
                 ? "Could not find a recipe with that name."
                 : $"**Recipe: {recipe.Name} (Owner: {recipe.RealOwnerName(Context.Guild)})**{Environment.NewLine}{recipe.Text}";
-            
+
             await ReplyAsync(botAnswer);
         }
 
         private async Task ListRecipesInternal(SocketUser owner = null, int page = 1, string cmdName = null)
         {
             if (page < 1)
+            {
                 page = 1;
+            }
 
             List<Recipe> recipes;
             int totalRecipeCount;
@@ -85,7 +87,13 @@ namespace CHEF.Components.Commands.Cooking
                 var totalPage = totalRecipeCount / RecipeContext.NumberPerPage +
                                 (totalRecipeCount % RecipeContext.NumberPerPage == 0 ? 0 : 1);
                 if (totalPage == 0)
+                {
                     totalPage += 1;
+                }
+
+                // todo https://discordnet.dev/guides/int_basics/message-components/responding-to-buttons.html
+                //var componentBuilder = new ComponentBuilder();
+                //componentBuilder.WithButton
 
                 var pageStr = $" *(Page:{page}/{totalPage})*";
                 var isFiltered = cmdName != null ? $" that contains `{cmdName}` in their name" : "";
@@ -98,8 +106,8 @@ namespace CHEF.Components.Commands.Cooking
                 {
                     if (page == 1)
                     {
-                        noMatch = owner == null ? 
-                            "Oh no ! My recipe book is empty... :(" : 
+                        noMatch = owner == null ?
+                            "Oh no ! My recipe book is empty... :(" :
                             $"No recipes found from an author named {owner}.";
                     }
                     else
@@ -133,10 +141,7 @@ namespace CHEF.Components.Commands.Cooking
             int page = 1,
             [Summary("Optional word to filter the search.")]
             string cmdName = null
-            )
-        {
-            await ListRecipesInternal(null, page, cmdName);
-        }
+            ) => await ListRecipesInternal(null, page, cmdName);
 
         [Command("listuser")]
         [Summary
@@ -149,16 +154,13 @@ namespace CHEF.Components.Commands.Cooking
             int page = 1,
             [Summary("Optional word to filter the search.")]
             string cmdName = null
-            )
-        {
-            await ListRecipesInternal(ownerName, page, cmdName);
-        }
+            ) => await ListRecipesInternal(ownerName, page, cmdName);
 
         [Command("new")]
         [Summary
             ("Creates a new command and add it to the cook book.")]
         [Alias("n", "mk", "create")]
-        [RequireRole(PermissionLevel.ModDev)]
+        [RequireRole(PermissionLevel.ModCreator)]
         public async Task NewRecipe(
             [Summary("The name to give to the command")]
             string cmdName,
@@ -281,7 +283,7 @@ namespace CHEF.Components.Commands.Cooking
         [Summary
             ("Edits a command that already exists in the cook book.")]
         [Alias("e")]
-        [RequireRole(PermissionLevel.ModDev)]
+        [RequireRole(PermissionLevel.ModCreator)]
         public async Task EditRecipe(
             [Summary("The name of the command to edit")]
             string cmdName,
@@ -344,7 +346,7 @@ namespace CHEF.Components.Commands.Cooking
             if (textPreview.Length >= textLengthLimit)
             {
                 await ReplyAsync($"The text length when the recipe will be shown will exceed {textLengthLimit} characters. " +
-                           $"Currently at {textPreview.Length}. " + 
+                           $"Currently at {textPreview.Length}. " +
                            "Please reduce the text length.");
 
                 return false;
@@ -357,7 +359,7 @@ namespace CHEF.Components.Commands.Cooking
         [Summary
             ("Deletes an exisiting command from the cook book.")]
         [Alias("d", "del", "rm", "remove")]
-        [RequireRole(PermissionLevel.ModDev)]
+        [RequireRole(PermissionLevel.ModCreator)]
         public async Task DeleteRecipe(
             [Summary("The name of the command to delete")]
             string cmdName)
@@ -390,7 +392,7 @@ namespace CHEF.Components.Commands.Cooking
                 context.Remove(existingRecipe);
                 await context.SaveChangesAsync();
             }
-            
+
 
             botAnswer.Clear();
             botAnswer.AppendLine($"Successfully deleted the cooking recipe called `{cmdName}`");
@@ -432,7 +434,7 @@ namespace CHEF.Components.Commands.Cooking
 
                 await context.SaveChangesAsync();
             }
-            
+
             await ReplyAsync($"Successfully deleted `{nbDuplicate}` recipes that were duplicate.");
 
             int nbForbidden;
@@ -493,7 +495,7 @@ namespace CHEF.Components.Commands.Cooking
 
                 await context.SaveChangesAsync();
             }
-            
+
             await ReplyAsync($"Successfully deleted `{nbForbidden}` recipes that had forbidden characters in them.");
         }
     }

@@ -11,15 +11,9 @@ namespace CHEF.Components.Commands
     {
         public static Dictionary<SocketGuild, RolesPermissionLevel> GuildRolePermissions;
 
-        public PermissionSystem(DiscordSocketClient client) : base(client)
-        {
-            GuildRolePermissions = new Dictionary<SocketGuild, RolesPermissionLevel>();
-        }
+        public PermissionSystem(DiscordSocketClient client) : base(client) => GuildRolePermissions = new Dictionary<SocketGuild, RolesPermissionLevel>();
 
-        public override Task SetupAsync()
-        {
-            return Task.CompletedTask;
-        }
+        public override Task SetupAsync() => Task.CompletedTask;
 
         public static void UpdateCache(SocketGuild guild)
         {
@@ -84,11 +78,11 @@ namespace CHEF.Components.Commands
                 {
                     // Todo: remove DefinedRoles and make this configurable at runtime instead
 
-                    if (role.Name.Equals(DefinedRoles.ModDeveloper))
+                    if (role.Name.Equals(DefinedRoles.ModCreator, StringComparison.InvariantCultureIgnoreCase))
                     {
                         rolesPositionReference[1] = role;
                     }
-                    else if (role.Name.Equals(DefinedRoles.CoreDeveloper))
+                    else if (role.Name.Equals(DefinedRoles.CoreDeveloper, StringComparison.InvariantCultureIgnoreCase))
                     {
                         rolesPositionReference[2] = role;
                     }
@@ -116,7 +110,7 @@ namespace CHEF.Components.Commands
     public enum PermissionLevel
     {
         None,
-        ModDev,
+        ModCreator,
         Elevated
     }
 
@@ -144,7 +138,7 @@ namespace CHEF.Components.Commands
 
     public static class DefinedRoles
     {
-        public const string ModDeveloper = "mod developer";
+        public const string ModCreator = "mod creator";
         public const string CoreDeveloper = "core developer";
         public const string Moderator = "moderator";
     }
