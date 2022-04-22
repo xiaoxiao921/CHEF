@@ -1,6 +1,5 @@
-FROM mcr.microsoft.com/dotnet/core/runtime:2.1
+FROM mcr.microsoft.com/dotnet/runtime:6.0
 
-RUN ls -la /
 COPY publish/ App/
 WORKDIR /App
 
