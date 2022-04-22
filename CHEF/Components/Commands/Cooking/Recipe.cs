@@ -30,14 +30,14 @@ namespace CHEF.Components.Commands.Cooking
 
         public async Task<Recipe> GetRecipe(string recipeName) =>
             await Recipes.AsQueryable()
-                .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(recipeName.ToLower()));
+                .FirstOrDefaultAsync(r => r.Name.Equals(recipeName, System.StringComparison.InvariantCultureIgnoreCase));
 
         public async Task<(List<Recipe>, int)> GetRecipes(string nameFilter = null, int page = 0, SocketUser owner = null)
         {
             var query = Recipes.AsQueryable();
             if (nameFilter != null)
             {
-                query = query.Where(r => r.Name.ToLower().Contains(nameFilter.ToLower()));
+                query = query.Where(r => r.Name.Contains(nameFilter, System.StringComparison.InvariantCultureIgnoreCase));
             }
             if (owner != null)
             {
@@ -63,7 +63,7 @@ namespace CHEF.Components.Commands.Cooking
         public int Id { get; set; }
         public ulong OwnerId { get; set; }
         public string OwnerName { get; set; }
-        
+
         public string Name { get; set; }
         public string Text { get; set; }
 
