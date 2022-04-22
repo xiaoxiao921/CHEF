@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,11 +12,15 @@ namespace CHEF.Components.Watcher
 {
     public class AutoPastebin
     {
-        private static readonly HttpClient HttpClient = new HttpClient();
+        private static readonly HttpClientHandler _httpClientHandler = new HttpClientHandler()
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+        };
+        private static readonly HttpClient _httpClient = new HttpClient(_httpClientHandler);
         private readonly string _siteUrl;
         private readonly string _postUrl;
 
-        public AutoPastebin(string siteUrl = "https://hastebin.com/")
+        public AutoPastebin(string siteUrl = "https://www.toptal.com/developers/hastebin/")
         {
             if (!siteUrl.EndsWith("/"))
             {
@@ -38,7 +43,7 @@ namespace CHEF.Components.Watcher
                     var fileType = System.IO.Path.GetExtension(attachment.Url);
                     if ((fileType == ".txt" || fileType == ".log" || fileType == ".cs") && attachment.Size < 1000000)
                     {
-                        var fileContent = await HttpClient.GetStringAsync(attachment.Url);
+                        var fileContent = await _httpClient.GetStringAsync(attachment.Url);
                         var botAnswer = new StringBuilder();
 
                         using (var context = new IgnoreContext())
@@ -51,7 +56,7 @@ namespace CHEF.Components.Watcher
                         }
 
                         var pasteResult = await PostBin(fileContent);
-                        
+
                         if (pasteResult.IsSuccess)
                         {
                             botAnswer.AppendLine(
@@ -71,18 +76,18 @@ namespace CHEF.Components.Watcher
             {
                 Content = new StringContent(content)
             };
-            HttpResponseMessage result = await HttpClient.SendAsync(request);
+            var result = await _httpClient.SendAsync(request);
 
             if (result.IsSuccessStatusCode)
             {
-                string json = await result.Content.ReadAsStringAsync();
+                var json = await result.Content.ReadAsStringAsync();
                 var hasteBinResult = JsonConvert.DeserializeObject<HasteBinResult>(json);
 
                 if (hasteBinResult?.Key != null)
                 {
                     hasteBinResult.FullUrl = $"{_siteUrl}{hasteBinResult.Key}";
                     hasteBinResult.IsSuccess = true;
-                    hasteBinResult.StatusCode = 200;
+                    hasteBinResult.StatusCode = HttpStatusCode.OK;
                     return hasteBinResult;
                 }
             }
@@ -91,7 +96,7 @@ namespace CHEF.Components.Watcher
             {
                 FullUrl = _siteUrl,
                 IsSuccess = false,
-                StatusCode = (int)result.StatusCode
+                StatusCode = result.StatusCode
             };
         }
     }
@@ -101,6 +106,6 @@ namespace CHEF.Components.Watcher
         public string Key { get; set; }
         public string FullUrl { get; set; }
         public bool IsSuccess { get; set; }
-        public int StatusCode { get; set; }
+        public HttpStatusCode StatusCode { get; set; }
     }
 }
