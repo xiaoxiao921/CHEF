@@ -30,15 +30,15 @@ namespace CHEF.Components.Commands.Cooking
 
         public async Task<Recipe> GetRecipe(string recipeName) =>
             await Recipes.AsQueryable()
-                // Reminder : You can't use System.StringComparison here.
-                .FirstOrDefaultAsync(r => r.Name.ToLowerInvariant().Equals(recipeName.ToLowerInvariant()));
+                // Reminder : You can't use System.StringComparison here. Or ToLowerInvariant. EF Core moment
+                .FirstOrDefaultAsync(r => r.Name.ToLower().Equals(recipeName.ToLower()));
 
         public async Task<(List<Recipe>, int)> GetRecipes(string nameFilter = null, int page = 0, SocketUser owner = null)
         {
             var query = Recipes.AsQueryable();
             if (nameFilter != null)
             {
-                query = query.Where(r => r.Name.ToLowerInvariant().Contains(nameFilter.ToLowerInvariant()));
+                query = query.Where(r => r.Name.ToLower().Contains(nameFilter.ToLower()));
             }
             if (owner != null)
             {
