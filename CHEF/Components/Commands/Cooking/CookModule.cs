@@ -99,18 +99,18 @@ namespace CHEF.Components.Commands.Cooking
                 var buttonBuilders = new List<ButtonBuilder>();
 
                 var guid = Guid.NewGuid();
-                var currentPageButton = new ButtonBuilder { Label = pageStr, CustomId = $"{guid}", Style = ButtonStyle.Secondary, IsDisabled = true };
+                var currentPageButton = new ButtonBuilder(pageStr, $"{guid}", ButtonStyle.Secondary, isDisabled: true);
 
                 if (totalPage > 1)
                 {
                     var noPreviousPages = page == 1;
                     var noNextPages = page >= totalPage;
 
-                    buttonBuilders.Add(new ButtonBuilder { Label = "First", CustomId = $"{guid}first", IsDisabled = noPreviousPages });
-                    buttonBuilders.Add(new ButtonBuilder { Label = "Previous", CustomId = $"{guid}previous", IsDisabled = noPreviousPages });
+                    buttonBuilders.Add(new ButtonBuilder("First", $"{guid}first", isDisabled: noPreviousPages));
+                    buttonBuilders.Add(new ButtonBuilder("Previous", $"{guid}previous", isDisabled: noPreviousPages));
                     buttonBuilders.Add(currentPageButton);
-                    buttonBuilders.Add(new ButtonBuilder { Label = "Next", CustomId = $"{guid}next", IsDisabled = noNextPages });
-                    buttonBuilders.Add(new ButtonBuilder { Label = "Last", CustomId = $"{guid}last", IsDisabled = noNextPages });
+                    buttonBuilders.Add(new ButtonBuilder("Next", $"{guid}next", isDisabled: noNextPages));
+                    buttonBuilders.Add(new ButtonBuilder("Last", $"{guid}last", isDisabled: noNextPages));
                 }
                 else
                 {
