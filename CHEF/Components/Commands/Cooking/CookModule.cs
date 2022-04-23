@@ -38,7 +38,7 @@ namespace CHEF.Components.Commands.Cooking
             await ReplyAsync(botAnswer);
         }
 
-        private async Task ListRecipesInternal(SocketUser owner = null, int page = 1, string cmdName = null)
+        private async Task ListRecipesInternal(SocketUser owner = null, int page = 1, string cmdName = null, IUserMessage existingBotMsg = null)
         {
             if (page < 1)
             {
@@ -96,28 +96,47 @@ namespace CHEF.Components.Commands.Cooking
 
                 // reference https://github.com/djthegr8/RoleX/blob/fb1cd476562df7d0a98d9da1baa31082f904843e/Hermes/Modules/Channel%20Permission/Categorydelete.cs#L41
                 var componentBuilder = new ComponentBuilder();
+                var buttonBuilders = new List<ButtonBuilder>();
 
                 var guid = Guid.NewGuid();
+                var currentPageButton = new ButtonBuilder { Label = pageStr, CustomId = $"{guid}", Style = ButtonStyle.Secondary, IsDisabled = true };
+
                 if (totalPage > 1)
                 {
                     var noPreviousPages = page == 1;
                     var noNextPages = page >= totalPage;
 
-                    componentBuilder.
-                        WithButton("First", $"{guid}first", disabled: noPreviousPages).
-                        WithButton("Previous", $"{guid}previous", disabled: noPreviousPages).
-                        WithButton(pageStr, $"{guid}", ButtonStyle.Secondary, disabled: true).
-                        WithButton("Next", $"{guid}next", disabled: noNextPages).
-                        WithButton("Last", $"{guid}last", disabled: noNextPages);
+                    buttonBuilders.Add(new ButtonBuilder { Label = "First", CustomId = $"{guid}first", IsDisabled = noPreviousPages });
+                    buttonBuilders.Add(new ButtonBuilder { Label = "Previous", CustomId = $"{guid}previous", IsDisabled = noPreviousPages });
+                    buttonBuilders.Add(currentPageButton);
+                    buttonBuilders.Add(new ButtonBuilder { Label = "Next", CustomId = $"{guid}next", IsDisabled = noNextPages });
+                    buttonBuilders.Add(new ButtonBuilder { Label = "Last", CustomId = $"{guid}last", IsDisabled = noNextPages });
                 }
                 else
                 {
-                    componentBuilder.
-                        WithButton(pageStr, $"{guid}", ButtonStyle.Secondary, disabled: true);
+                    buttonBuilders.Add(currentPageButton);
+                }
+
+                foreach (var buttonBuilder in buttonBuilders)
+                {
+                    componentBuilder.WithButton(buttonBuilder);
                 }
 
                 var isFiltered = cmdName != null ? $" that contains `{cmdName}` in their name" : "";
-                await ReplyAsync($"Here's a list of recipes{isFiltered}: ", false, embedBuilder.Build(), components: componentBuilder.Build());
+                var msgContent = $"Here's a list of recipes{isFiltered}: ";
+                if (existingBotMsg == null)
+                {
+                    existingBotMsg = await ReplyAsync(msgContent, false, embedBuilder.Build(), components: componentBuilder.Build());
+                }
+                else
+                {
+                    await existingBotMsg.ModifyAsync(msg =>
+                    {
+                        msg.Content = msgContent;
+                        msg.Embed = embedBuilder.Build();
+                        msg.Components = componentBuilder.Build();
+                    });
+                }
 
                 if (totalPage > 1)
                 {
@@ -131,7 +150,21 @@ namespace CHEF.Components.Commands.Cooking
                     var noInteractionWithAnyButtonsAfterTimeout = interaction == null;
                     if (noInteractionWithAnyButtonsAfterTimeout)
                     {
-                        Logger.Log("interaction timed out");
+                        Logger.Log("Recipe listing interaction timed out.");
+
+                        // Disable buttons
+                        componentBuilder = new();
+                        foreach (var buttonBuilder in buttonBuilders)
+                        {
+                            buttonBuilder.IsDisabled = true;
+                            componentBuilder.WithButton(buttonBuilder);
+                        }
+
+                        await existingBotMsg.ModifyAsync(msg =>
+                        {
+                            msg.Components = componentBuilder.Build();
+                        });
+
                         return;
                     }
 
@@ -154,7 +187,7 @@ namespace CHEF.Components.Commands.Cooking
                         page = totalPage;
                     }
 
-                    await ListRecipesInternal(owner, page, cmdName);
+                    await ListRecipesInternal(owner, page, cmdName, existingBotMsg);
                 }
             }
             else
