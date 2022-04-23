@@ -117,7 +117,7 @@ namespace CHEF.Components.Commands.Cooking
                 }
 
                 var isFiltered = cmdName != null ? $" that contains `{cmdName}` in their name" : "";
-                await ReplyAsync($"Here's a list of recipes{isFiltered}: ", false, embedBuilder.Build(), component: componentBuilder.Build());
+                await ReplyAsync($"Here's a list of recipes{isFiltered}: ", false, embedBuilder.Build(), components: componentBuilder.Build());
 
                 if (totalPage > 1)
                 {

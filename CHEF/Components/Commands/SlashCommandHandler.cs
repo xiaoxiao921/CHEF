@@ -4,9 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Net;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 
 namespace CHEF.Components.Commands
 {
@@ -73,10 +71,9 @@ namespace CHEF.Components.Commands
                         {
                             await Client.Rest.CreateGlobalCommand(slashCommandData.Builder.Build());
                         }
-                        catch (ApplicationCommandException exception)
+                        catch (Exception exception)
                         {
-                            var json = JsonConvert.SerializeObject(exception.Error, Formatting.Indented);
-                            Logger.Log(json);
+                            Logger.Log(exception.ToString());
                         }
                     }
                 }
