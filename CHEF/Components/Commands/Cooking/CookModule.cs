@@ -319,16 +319,7 @@ namespace CHEF.Components.Commands.Cooking
                     OwnerId = Context.User.Id,
                     OwnerName = Context.User.ToString()
                 });
-#if DEBUG
-                // Testing duplicates
-                await context.Recipes.AddAsync(new Recipe
-                {
-                    Name = cmdName,
-                    Text = text,
-                    OwnerId = Context.User.Id,
-                    OwnerName = Context.User.ToString()
-                });
-#endif
+
                 await context.SaveChangesAsync();
             }
 
