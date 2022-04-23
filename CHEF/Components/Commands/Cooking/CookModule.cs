@@ -106,7 +106,7 @@ namespace CHEF.Components.Commands.Cooking
                     componentBuilder.
                         WithButton("First", $"{guid}first", disabled: noPreviousPages).
                         WithButton("Previous", $"{guid}previous", disabled: noPreviousPages).
-                        WithButton(pageStr, null, ButtonStyle.Secondary, disabled: true).
+                        WithButton(pageStr, $"{guid}", ButtonStyle.Secondary, disabled: true).
                         WithButton("Next", $"{guid}next", disabled: noNextPages).
                         WithButton("Last", $"{guid}last", disabled: noNextPages);
                 }
