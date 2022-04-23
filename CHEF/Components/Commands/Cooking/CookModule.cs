@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -91,13 +92,70 @@ namespace CHEF.Components.Commands.Cooking
                     totalPage += 1;
                 }
 
-                // todo https://discordnet.dev/guides/int_basics/message-components/responding-to-buttons.html
-                var componentBuilder = new ComponentBuilder();
-                componentBuilder.WithButton("First", "customId", ButtonStyle.Success, null, null, true, 0);
+                var pageStr = $"{page} / {totalPage}";
 
-                var pageStr = $" *(Page:{page}/{totalPage})*";
+                // reference https://github.com/djthegr8/RoleX/blob/fb1cd476562df7d0a98d9da1baa31082f904843e/Hermes/Modules/Channel%20Permission/Categorydelete.cs#L41
+                var componentBuilder = new ComponentBuilder();
+
+                var guid = Guid.NewGuid();
+                if (totalPage > 1)
+                {
+                    var noPreviousPages = page == 1;
+                    var noNextPages = page >= totalPage;
+
+                    componentBuilder.
+                        WithButton("First", $"{guid}first", disabled: noPreviousPages).
+                        WithButton("Previous", $"{guid}previous", disabled: noPreviousPages).
+                        WithButton(pageStr, null, ButtonStyle.Secondary, disabled: true).
+                        WithButton("Next", $"{guid}next", disabled: noNextPages).
+                        WithButton("Last", $"{guid}last", disabled: noNextPages);
+                }
+                else
+                {
+                    componentBuilder.
+                        WithButton(pageStr, null, ButtonStyle.Secondary, disabled: true);
+                }
+
                 var isFiltered = cmdName != null ? $" that contains `{cmdName}` in their name" : "";
-                await ReplyAsync($"Here's a list of recipes{isFiltered}{pageStr} : ", false, embedBuilder.Build(), component: componentBuilder.Build());
+                await ReplyAsync($"Here's a list of recipes{isFiltered}: ", false, embedBuilder.Build(), component: componentBuilder.Build());
+
+                if (totalPage > 1)
+                {
+                    var cancelSource = new CancellationTokenSource();
+                    const int timeoutInMs = 15000;
+                    cancelSource.CancelAfter(timeoutInMs);
+
+                    var interaction = await InteractionHandler.GetNextSocketMessageComponent(Context.Client,
+                        m => m.Data.CustomId.Contains(guid.ToString()) && m.User.Id == Context.User.Id, cancelSource.Token);
+
+                    var noInteractionWithAnyButtonsAfterTimeout = interaction == null;
+                    if (noInteractionWithAnyButtonsAfterTimeout)
+                    {
+                        Logger.Log("interaction timed out");
+                        return;
+                    }
+
+                    await interaction.DeferAsync();
+
+                    if (interaction.Data.CustomId.Contains("first"))
+                    {
+                        page = 1;
+                    }
+                    else if (interaction.Data.CustomId.Contains("previous"))
+                    {
+                        page -= 1;
+                    }
+                    else if (interaction.Data.CustomId.Contains("next"))
+                    {
+                        page += 1;
+                    }
+                    else if (interaction.Data.CustomId.Contains("last"))
+                    {
+                        page = totalPage;
+                    }
+
+                    await ListRecipesInternal(owner, page, cmdName);
+                }
             }
             else
             {
