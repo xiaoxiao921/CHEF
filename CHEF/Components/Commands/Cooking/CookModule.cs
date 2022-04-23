@@ -113,7 +113,7 @@ namespace CHEF.Components.Commands.Cooking
                 else
                 {
                     componentBuilder.
-                        WithButton(pageStr, null, ButtonStyle.Secondary, disabled: true);
+                        WithButton(pageStr, $"{guid}", ButtonStyle.Secondary, disabled: true);
                 }
 
                 var isFiltered = cmdName != null ? $" that contains `{cmdName}` in their name" : "";
