@@ -1,9 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using CHEF.Components.Commands;
 using Discord.WebSocket;
 
 namespace CHEF.Components.Watcher
@@ -12,25 +12,15 @@ namespace CHEF.Components.Watcher
     {
         public const string DuplicateAssemblyError =
             "You seems to have `Tried to load duplicate assembly...` error message." +
-            "When that happens, you should delete your " + 
-            @"Risk of Rain 2\Risk of Rain 2_Data\Managed folder " + 
+            "When that happens, you should delete your " +
+            @"Risk of Rain 2\Risk of Rain 2_Data\Managed folder " +
             "and verify the integrity of the game files\n" +
             "http://steamcdn-a.akamaihd.net/steam/support/faq/verifygcf2.gif";
-
-        public const string R2APIMonoModPatchError =
-            "You seems to have `The Monomod patch of R2API seems to be missing` error message." +
-            "When that happens, it either means that :\n" +
-            "You are missing the .dll file like the message is saying,\n" +
-            "or\n" +
-            "You are missing the monomod loader that is normally located in the " + 
-            @"`Risk of Rain 2\BepInEx\patchers\BepInEx.MonoMod.Loader` folder." + "\n" + 
-            "If you don't have this folder, please download BepInEx again from " + 
-            "the thunderstore and make sure to follow the installation instructions.";
 
         public const string CrashLogLocation =
             "You also mentioned the word `crash` in your message.\n" +
             "Here is the file path for a log file that could be more useful to us :" +
-            @"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`" + "\n" + 
+            @"`C:\Users\<UserName>\AppData\LocalLow\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`" + "\n" +
             "or\n" +
             @"`C:\Users\< UserName >\AppData\Local\Temp\Hopoo Games, LLC\Risk of Rain 2\output_log.txt`";
 
@@ -59,35 +49,28 @@ namespace CHEF.Components.Watcher
                     answer.AppendLine(DuplicateAssemblyError);
                     hasCommonError = true;
                 }
-
-                if (text.Contains("The Monomod patch of", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    answer.AppendLine(R2APIMonoModPatchError);
-                    hasCommonError = true;
-                }
             }
 
             return hasCommonError;
         }
 
         /// <summary>
-        /// Check if the <paramref name="text"/> contains version numbers of mods<para/>
-        /// Returns true if the text contains any outdated mods
+        /// Build a string discord bot answer that output outdated / deprecated mods from the <paramref name="text"/> by checking for TS Manifest lines in it and the TS API<para/>
         /// </summary>
-        /// /// <param name="text">Text that may or may not contains mod version numbers</param>
+        /// /// <param name="text">Text that may or may not contains mod version numbers (TS Manifest lines)</param>
         /// <param name="answer">StringBuilder that will contains the bot answer ready to be sent</param>
-        /// /// <param name="author">User that we are answering to</param>
-        /// <returns></returns>
-        public static async Task<bool> CheckModsVersion(string text, StringBuilder answer, SocketUser author)
+        /// /// <param name="author">the user who posted the <paramref name="text"/></param>
+        /// <returns>true if the <paramref name="text"/> contains any outdated / deprecated mods</returns>
+        public static async Task<bool> CheckForOutdatedAndDeprecatedMods(string text, StringBuilder answer, SocketUser author)
         {
+            var textContainsAnyBadMod = false;
+
             if (text != null)
             {
-                if (text.Contains("loading [", StringComparison.InvariantCultureIgnoreCase))
+                const string ThunderstoreManifestPrefix = "TS Manifest: ";
+                if (text.Contains(ThunderstoreManifestPrefix, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    var outdatedMods = new StringBuilder();
-                    var deprecatedMods = new StringBuilder();
-
-                    const string regexFindVer = "Loading \\[(.*?) ([0-9].*?)]";
+                    const string regexFindVer = ThunderstoreManifestPrefix + "(.*)-([0-9]*.[0-9]*.[0-9]*)";
                     var rx = new Regex(regexFindVer,
                         RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     var matches = rx.Matches(text);
@@ -96,57 +79,57 @@ namespace CHEF.Components.Watcher
                     {
                         if (match.Groups.Count > 2)
                         {
-                            var modName = match.Groups[1].ToString();
-                            var verFromText = match.Groups[2].ToString().Replace(" ", "");
+                            var outdatedMods = new StringBuilder();
+                            var deprecatedMods = new StringBuilder();
 
-                            // todo : re-enable me for all plugins when we have consistency
-                            // across manifest version and the version from the plugin / log
+                            // A log line is like this :
+                            // TS Manifest: Random-Team-Name-ModName-1.0.0
 
-                            var (latestVer, isDeprecated) = await IsThisLatestModVersion(modName, verFromText);
-                            if (latestVer != null && !isDeprecated && 
-                                (modName.ToLower().Contains("r2api") ||
-                                modName.ToLower().Contains("bepin")))
+                            var modTeamAndName = match.Groups[1].ToString().Split('-');
+                            var modTeam = string.Join('-', modTeamAndName.Take(modTeamAndName.Length - 1));
+                            var modName = modTeamAndName[^1];
+                            var modVersion = match.Groups[2].ToString();
+
+                            var (latestVer, isDeprecated) = await IsThisLatestModVersion(modName, modVersion);
+                            if (latestVer != null && !isDeprecated)
                             {
-                                outdatedMods.AppendLine($"{modName} v{verFromText} instead of v{latestVer}");
+                                outdatedMods.AppendLine($"{modName} v{modVersion} instead of v{latestVer}");
                             }
                             else if (isDeprecated)
                             {
                                 deprecatedMods.AppendLine($"{modName}");
                             }
+
+                            if (outdatedMods.Length > 0)
+                            {
+                                var outdatedModsS = outdatedMods.ToString();
+                                var plural = outdatedModsS.Count(c => c == '\n') > 1;
+                                answer.AppendLine(
+                                    $"{author.Mention}, you don't have the latest version installed of " +
+                                    $"the following mod{(plural ? "s" : "")}:" + Environment.NewLine +
+                                    outdatedModsS);
+
+                                textContainsAnyBadMod = true;
+                            }
+
+                            if (deprecatedMods.Length > 0)
+                            {
+                                var deprecatedModsS = deprecatedMods.ToString();
+                                var plural = deprecatedModsS.Count(c => c == '\n') > 1;
+                                answer.AppendLine(
+                                    $"{author.Mention}, you have {(plural ? "" : "a")} deprecated " +
+                                    $"mod{(plural ? "s" : "")} installed. Deprecated mods usually don't work:" + Environment.NewLine +
+                                    deprecatedModsS);
+
+                                textContainsAnyBadMod = true;
+                            }
                         }
+
                     }
-
-                    var badStuffInLog = false;
-
-                    if (outdatedMods.Length > 0)
-                    {
-                        var outdatedModsS = outdatedMods.ToString();
-                        var plural = outdatedModsS.Count(c => c == '\n') > 1;
-                        answer.AppendLine(
-                            $"{author.Mention}, looks like you don't have the latest version installed of " +
-                            $"the following mod{(plural ? "s" : "")} :" + Environment.NewLine +
-                            outdatedModsS);
-
-                        badStuffInLog = true;
-                    }
-
-                    if (deprecatedMods.Length > 0)
-                    {
-                        var deprecatedModsS = deprecatedMods.ToString();
-                        var plural = deprecatedModsS.Count(c => c == '\n') > 1;
-                        answer.AppendLine(
-                            $"{author.Mention}, looks like you have {(plural ? "" : "a")} deprecated " +
-                            $"mod{(plural ? "s" : "")} installed. Deprecated mods usually don't work :" + Environment.NewLine +
-                            deprecatedModsS);
-
-                        badStuffInLog = true;
-                    }
-
-                    return badStuffInLog;
                 }
             }
 
-            return false;
+            return textContainsAnyBadMod;
         }
 
         /// <summary>
