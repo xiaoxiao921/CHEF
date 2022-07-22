@@ -51,7 +51,7 @@ namespace CHEF.Components.Watcher
 
                         CommonIssues.CheckCommonLogError(queryResult.ImageText, botAnswer, msg.Author);
 
-                        var hasOutdatedMods = await CommonIssues.CheckModsVersion(queryResult.ImageText, botAnswer, msg.Author);
+                        var hasOutdatedMods = await CommonIssues.CheckForOutdatedAndDeprecatedMods(queryResult.ImageText, botAnswer, msg.Author);
                         if (hasOutdatedMods)
                         {
                             // Found mods, so its probably a console log that is screenshot, lets add a tag so its for sure recognized
@@ -72,9 +72,9 @@ namespace CHEF.Components.Watcher
                         if (queryResult.IsAConsole())
                         {
                             botAnswer.AppendLine($"{msg.Author.Mention}, looks like you just uploaded a screenshot of a BepinEx console / log file." +
-                                                 Environment.NewLine + 
+                                                 Environment.NewLine +
                                                  "Know that most of the time, a full log is way more useful for finding what your problem is.");
-                            
+
                             if (msg.Content.Contains("crash", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 botAnswer.AppendLine(CommonIssues.CrashLogLocation);
@@ -89,8 +89,8 @@ namespace CHEF.Components.Watcher
                             return botAnswer.ToString();
                         }
 
-                        if (queryResult.IsWindowExplorer() && 
-                            (queryResult.ImageText.Contains("bepin", StringComparison.InvariantCultureIgnoreCase) || 
+                        if (queryResult.IsWindowExplorer() &&
+                            (queryResult.ImageText.Contains("bepin", StringComparison.InvariantCultureIgnoreCase) ||
                              queryResult.ImageText.Contains("risk of rain", StringComparison.InvariantCultureIgnoreCase)))
                         {
                             var channel = msg.Channel as SocketGuildChannel;
@@ -101,7 +101,7 @@ namespace CHEF.Components.Watcher
                             if (faqChannel != null)
                             {
                                 botAnswer.AppendLine(
-                                    "If you are struggling installing BepInEx / R2API: " + Environment.NewLine + 
+                                    "If you are struggling installing BepInEx / R2API: " + Environment.NewLine +
                                     $"There is a video and an image at the bottom of the <#{faqChannel.Id}> that explains how to install them properly.");
                             }
                             botAnswer.AppendLine("If the issue is something else, just wait for help.");
@@ -136,7 +136,7 @@ namespace CHEF.Components.Watcher
             {
                 Logger.Log(e.ToString());
             }
-            
+
             return res;
         }
 
@@ -192,7 +192,7 @@ namespace CHEF.Components.Watcher
                 // Windows 10
                 // file: файл
 
-                return ContainTag("файл") || 
+                return ContainTag("файл") ||
                        ContainTag("папки") ||
                        ContainTag("файлы на компьютере");
             }

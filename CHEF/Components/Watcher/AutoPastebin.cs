@@ -51,7 +51,7 @@ namespace CHEF.Components.Watcher
                             if (!await context.IsIgnored(msg.Author))
                             {
                                 CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
-                                await CommonIssues.CheckModsVersion(fileContent, botAnswer, msg.Author);
+                                await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
                             }
                         }
 
