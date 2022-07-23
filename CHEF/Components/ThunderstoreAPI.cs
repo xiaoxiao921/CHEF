@@ -100,13 +100,13 @@ namespace CHEF.Components
         public const string IsDownMessage = "Couldn't retrieve mod information, Thunderstore API is down. (Try again in 5-10 minutes)";
         public const string IsUpMessage = "The Thunderstore API is up.";
 
-        private static readonly HttpClientHandler _httpClientHandler = new HttpClientHandler()
+        private static readonly HttpClientHandler _httpClientHandler = new()
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
         };
-        private static readonly HttpClient _httpClient = new HttpClient(_httpClientHandler);
+        private static readonly HttpClient _httpClient = new(_httpClientHandler);
 
-        private static TimeSpan _cacheRefreshInterval = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan _cacheRefreshInterval = TimeSpan.FromMinutes(5);
         private static DateTime _lastCacheTime;
         private static PackageV1[] _packageCache = null;
 
@@ -119,10 +119,14 @@ namespace CHEF.Components
                 _lastCacheTime = timeNow;
             }
 
-            var mod = _packageCache.FirstOrDefault(package => package.Name.Contains(modName, StringComparison.InvariantCultureIgnoreCase));
+            var mod = _packageCache.FirstOrDefault(package => package.Name.Equals(modName, StringComparison.OrdinalIgnoreCase));
             if (mod == null)
             {
-                mod = _packageCache.FirstOrDefault(package => package.FullName.Contains(modName, StringComparison.InvariantCultureIgnoreCase));
+                mod = _packageCache.FirstOrDefault(package => package.Name.Contains(modName, StringComparison.OrdinalIgnoreCase));
+            }
+            if (mod == null)
+            {
+                mod = _packageCache.FirstOrDefault(package => package.FullName.Contains(modName, StringComparison.OrdinalIgnoreCase));
             }
 
             return mod;
