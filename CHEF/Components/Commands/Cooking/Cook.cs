@@ -27,7 +27,7 @@ namespace CHEF.Components.Commands.Cooking
         {
             Task.Run(async () =>
             {
-                if (!(msg is SocketUserMessage message))
+                if (msg is not SocketUserMessage message)
                     return;
 
                 var argPos = 0;
@@ -36,7 +36,7 @@ namespace CHEF.Components.Commands.Cooking
                     message.Author.IsBot)
                     return;
 
-                var cmdName = message.Content.Substring(1);
+                var cmdName = message.Content[1..];
 
                 using (var context = new RecipeContext())
                 {

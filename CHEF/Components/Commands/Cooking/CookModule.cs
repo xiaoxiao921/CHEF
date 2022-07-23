@@ -63,7 +63,7 @@ namespace CHEF.Components.Commands.Cooking
 
                 try
                 {
-                    embedBuilder.AddField($"{recipe.Name}", $"{recipeText.Substring(0, recipeTextLength)}");
+                    embedBuilder.AddField($"{recipe.Name}", $"{recipeText[..recipeTextLength]}");
                 }
                 catch (Exception)
                 {
