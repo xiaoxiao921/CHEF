@@ -19,7 +19,7 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal
     - name: Publish
-      run: dotnet publish CHEF.sln --configuration Release --framework netcoreapp2.1 --output ./publish --self-contained false
+      run: dotnet publish CHEF.sln --configuration Release --output ./publish --self-contained false
     - name: Login to DockerHub Registry
       run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
     - name: Get the version
