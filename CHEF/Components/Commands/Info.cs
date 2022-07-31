@@ -183,16 +183,32 @@ namespace CHEF.Components.Commands
             [Summary("The mod to get info from")]
             [Remainder] string modName)
         {
-            modName = modName.Replace(' ', '_');
+            // Try finding the mod with whitespace replaced by underscore (TS UI replace packages underscores are replaced by whitespaces)
+            var modNameWithUnderscoreInsteadOfWhiteSpace = modName.Replace(' ', '_');
             PackageV1 modInfo;
             try
             {
-                modInfo = await Thunderstore.GetModInfoV1(modName);
+                modInfo = await Thunderstore.GetModInfoV1(modNameWithUnderscoreInsteadOfWhiteSpace);
             }
             catch (JsonSerializationException)
             {
                 await ReplyAsync(Thunderstore.IsDownMessage);
                 return;
+            }
+
+            // Try again but with whitespace totally removed
+            if (modInfo == null)
+            {
+                var modNameWithNoWhiteSpace = modName.Replace(" ", "");
+                try
+                {
+                    modInfo = await Thunderstore.GetModInfoV1(modNameWithNoWhiteSpace);
+                }
+                catch (JsonSerializationException)
+                {
+                    await ReplyAsync(Thunderstore.IsDownMessage);
+                    return;
+                }
             }
 
             if (modInfo == null)
