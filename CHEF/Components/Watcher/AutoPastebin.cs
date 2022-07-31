@@ -60,7 +60,7 @@ namespace CHEF.Components.Watcher
                         if (pasteResult.IsSuccess)
                         {
                             botAnswer.AppendLine(
-                                $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: {pasteResult.FullUrl}");
+                                $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>");
                             return botAnswer.ToString();
                         }
                     }
