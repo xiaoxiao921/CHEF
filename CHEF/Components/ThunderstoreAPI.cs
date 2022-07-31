@@ -119,6 +119,12 @@ namespace CHEF.Components
                 _lastCacheTime = timeNow;
             }
 
+            return TryFindModFromCache(modName);
+        }
+
+        // Various queries for trying to find the package the user needs.
+        private static PackageV1 TryFindModFromCache(string modName)
+        {
             var mod = _packageCache.FirstOrDefault(package => package.Name.Equals(modName, StringComparison.OrdinalIgnoreCase));
             if (mod == null)
             {
