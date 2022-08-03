@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CHEF.Components.Commands.Ignore;
 using Discord.WebSocket;
@@ -83,7 +84,7 @@ public class AutoPastebin
                                         Logger.Log($"Skipping log scanning for file {zipArchiveEntry.Name} because file size is {zipArchiveEntry.Length}, max is {attachmentMaxFileSizeInBytes}");
                                     }
 
-                                    Logger.Log("reading zip entry into a string");
+                                    Logger.Log("Reading zip entry into a string");
                                     using var entryStream = zipArchiveEntry.Open();
                                     using var streamReader = new StreamReader(entryStream);
                                     fileContent = streamReader.ReadToEnd();
@@ -116,16 +117,32 @@ public class AutoPastebin
                         }
 
                         Logger.Log("Trying to post file content to pastebin endpoints");
-                        var pasteResult = await PostBin(fileContent);
-
-                        if (pasteResult.IsSuccess)
+                        try
                         {
-                            botAnswer.AppendLine(
-                                $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>");
+                            var timeout = TimeSpan.FromSeconds(15);
+                            using var cts = new CancellationTokenSource(timeout);
+                            var pasteResult = await PostBin(fileContent).WaitAsync(cts.Token);
+                            if (pasteResult.IsSuccess)
+                            {
+                                var answer = $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>";
+                                Logger.Log(answer);
+                                botAnswer.AppendLine(answer);
+                            }
+                            else
+                            {
+                                Logger.Log("Failed posting log to any hastebin endpoints");
+                            }
                         }
-                        else
+                        catch (Exception e)
                         {
-                            Logger.Log("Failed posting log to any hastebin endpoints");
+                            if (e is not TimeoutException)
+                            {
+                                Logger.Log(e.ToString());
+                            }
+                            else
+                            {
+                                Logger.Log("Failed posting log to any hastebin endpoints within a reasonable amount of time");
+                            }
                         }
                     }
 
