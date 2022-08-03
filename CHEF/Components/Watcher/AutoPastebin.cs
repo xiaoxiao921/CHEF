@@ -83,7 +83,9 @@ public class AutoPastebin
                                         Logger.Log($"Skipping log scanning for file {zipArchiveEntry.Name} because file size is {zipArchiveEntry.Length}, max is {attachmentMaxFileSizeInBytes}");
                                     }
 
-                                    using var streamReader = new StreamReader(zipArchiveEntry.Open());
+                                    Logger.Log("reading zip entry into a string");
+                                    using var entryStream = zipArchiveEntry.Open();
+                                    using var streamReader = new StreamReader(entryStream);
                                     fileContent = streamReader.ReadToEnd();
                                     break;
                                 }
@@ -103,6 +105,7 @@ public class AutoPastebin
                         {
                             if (!await context.IsIgnored(msg.Author))
                             {
+                                Logger.Log("Scanning log content for common issues");
                                 CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
                                 await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
                             }
@@ -112,6 +115,7 @@ public class AutoPastebin
                             }
                         }
 
+                        Logger.Log("Trying to post file content to pastebin endpoints");
                         var pasteResult = await PostBin(fileContent);
 
                         if (pasteResult.IsSuccess)
