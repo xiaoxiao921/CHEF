@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -7,27 +10,31 @@ using System.Threading.Tasks;
 using CHEF.Components.Commands.Ignore;
 using Discord.WebSocket;
 using Newtonsoft.Json;
-
 namespace CHEF.Components.Watcher
 {
-    public class AutoPastebin
+public class AutoPastebin
     {
         private static readonly HttpClientHandler _httpClientHandler = new HttpClientHandler()
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
         };
-        private static readonly HttpClient _httpClient = new HttpClient(_httpClientHandler);
-        private readonly string _siteUrl;
-        private readonly string _postUrl;
+        private static readonly HttpClient _httpClient = new(_httpClientHandler);
+        private readonly List<string> _siteUrls = new();
+        private readonly List<string> _postUrls = new();
 
-        public AutoPastebin(string siteUrl = "https://www.toptal.com/developers/hastebin/")
+        public AutoPastebin(params string[] hastebinUrls)
         {
-            if (!siteUrl.EndsWith("/"))
+            foreach (var hastebinUrl in hastebinUrls)
             {
-                siteUrl += "/";
+                var siteUrl = hastebinUrl;
+                if (!hastebinUrl.EndsWith("/"))
+                {
+                    siteUrl += "/";
+                }
+
+                _siteUrls.Add(siteUrl);
+                _postUrls.Add(siteUrl + "documents/");
             }
-            _siteUrl = siteUrl;
-            _postUrl = siteUrl + "documents/";
         }
 
         internal async Task<string> Try(SocketMessage msg)
@@ -40,27 +47,65 @@ namespace CHEF.Components.Watcher
             {
                 var attachment = msg.Attachments.First();
                 {
-                    var fileType = System.IO.Path.GetExtension(attachment.Url);
-                    if ((fileType == ".txt" || fileType == ".log" || fileType == ".cs") && attachment.Size < 1000000)
+                    var fileType = Path.GetExtension(attachment.Url);
+
+                    static bool IsPasteBinValidExtension(string extension)
                     {
-                        var fileContent = await _httpClient.GetStringAsync(attachment.Url);
+                        return extension == ".txt" || extension == ".log" || extension == ".cs";
+                    }
+
+                    static bool IsAttachmentValidExtension(string extension)
+                    {
+                        return IsPasteBinValidExtension(extension) || extension == ".zip";
+                    }
+
+                    if (IsAttachmentValidExtension(fileType) && attachment.Size < 8000000)
+                    {
+                        var fileContentStream = await _httpClient.GetStreamAsync(attachment.Url);
                         var botAnswer = new StringBuilder();
 
-                        using (var context = new IgnoreContext())
+                        string fileContent = "";
+                        if (fileType == ".zip")
                         {
-                            if (!await context.IsIgnored(msg.Author))
+                            using (var zipArchive = new ZipArchive(fileContentStream))
                             {
-                                CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
-                                await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
+                                foreach (var zipArchiveEntry in zipArchive.Entries)
+                                {
+                                    var extension = Path.GetExtension(zipArchiveEntry.Name);
+                                    if (IsPasteBinValidExtension(extension))
+                                    {
+                                        using var streamReader = new StreamReader(zipArchiveEntry.Open());
+                                        fileContent = streamReader.ReadToEnd();
+                                        break;
+                                    }
+                                }
                             }
                         }
-
-                        var pasteResult = await PostBin(fileContent);
-
-                        if (pasteResult.IsSuccess)
+                        else
                         {
-                            botAnswer.AppendLine(
-                                $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>");
+                            using var streamReader = new StreamReader(fileContentStream);
+                            fileContent = streamReader.ReadToEnd();
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(fileContent))
+                        {
+                            using (var context = new IgnoreContext())
+                            {
+                                if (!await context.IsIgnored(msg.Author))
+                                {
+                                    CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
+                                    await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
+                                }
+                            }
+
+                            var pasteResult = await PostBin(fileContent);
+
+                            if (pasteResult.IsSuccess)
+                            {
+                                botAnswer.AppendLine(
+                                    $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>");
+                            }
+
                             return botAnswer.ToString();
                         }
                     }
@@ -72,31 +117,40 @@ namespace CHEF.Components.Watcher
 
         private async Task<HasteBinResult> PostBin(string content)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, new Uri(_postUrl))
-            {
-                Content = new StringContent(content)
-            };
-            var result = await _httpClient.SendAsync(request);
+            string siteUrl = "";
+            HttpResponseMessage result = null;
 
-            if (result.IsSuccessStatusCode)
+            for (int i = 0; i < _siteUrls.Count; i++)
             {
-                var json = await result.Content.ReadAsStringAsync();
-                var hasteBinResult = JsonConvert.DeserializeObject<HasteBinResult>(json);
+                siteUrl = _siteUrls[i];
+                var postUrl = _postUrls[i];
 
-                if (hasteBinResult?.Key != null)
+                var request = new HttpRequestMessage(HttpMethod.Post, new Uri(postUrl))
                 {
-                    hasteBinResult.FullUrl = $"{_siteUrl}{hasteBinResult.Key}";
-                    hasteBinResult.IsSuccess = true;
-                    hasteBinResult.StatusCode = HttpStatusCode.OK;
-                    return hasteBinResult;
+                    Content = new StringContent(content)
+                };
+                result = await _httpClient.SendAsync(request);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    var json = await result.Content.ReadAsStringAsync();
+                    var hasteBinResult = JsonConvert.DeserializeObject<HasteBinResult>(json);
+
+                    if (hasteBinResult?.Key != null)
+                    {
+                        hasteBinResult.FullUrl = $"{siteUrl}{hasteBinResult.Key}";
+                        hasteBinResult.IsSuccess = true;
+                        hasteBinResult.StatusCode = HttpStatusCode.OK;
+                        return hasteBinResult;
+                    }
                 }
             }
 
             return new HasteBinResult
             {
-                FullUrl = _siteUrl,
+                FullUrl = siteUrl,
                 IsSuccess = false,
-                StatusCode = result.StatusCode
+                StatusCode = result != null ? result.StatusCode : HttpStatusCode.NotFound
             };
         }
     }

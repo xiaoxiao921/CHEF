@@ -19,7 +19,7 @@ namespace CHEF.Components.Watcher
 
         public Watcher(DiscordSocketClient client) : base(client)
         {
-            _autoPastebin = new AutoPastebin();
+            _autoPastebin = new AutoPastebin("https://hastebin.com/", "https://www.toptal.com/developers/hastebin/", "https://r2modman-hastebin.herokuapp.com/");
             _imageParser = new ImageParser();
             _spamFilter = new SpamFilter();
         }
@@ -66,7 +66,7 @@ namespace CHEF.Components.Watcher
                         await msg.Channel.SendMessageAsync($"{msg.Author.Mention} https://dontasktoask.com/");
                     }
                 }
-                
+
             });
 
             return Task.CompletedTask;
