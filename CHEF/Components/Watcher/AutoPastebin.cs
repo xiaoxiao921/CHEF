@@ -59,12 +59,14 @@ public class AutoPastebin
                         return IsPasteBinValidExtension(extension) || extension == ".zip";
                     }
 
-                    if (IsAttachmentValidExtension(fileType) && attachment.Size < 8000000)
+                    const int EightMegaBytes = 8000000;
+                    const int attachmentMaxFileSizeInBytes = EightMegaBytes;
+                    if (IsAttachmentValidExtension(fileType) && attachment.Size <= attachmentMaxFileSizeInBytes)
                     {
                         var fileContentStream = await _httpClient.GetStreamAsync(attachment.Url);
                         var botAnswer = new StringBuilder();
 
-                        string fileContent = "";
+                        string fileContent = null;
                         if (fileType == ".zip")
                         {
                             using (var zipArchive = new ZipArchive(fileContentStream))
