@@ -46,71 +46,86 @@ public class AutoPastebin
                 msg.Attachments.Count == 1)
             {
                 var attachment = msg.Attachments.First();
+                var fileType = Path.GetExtension(attachment.Url);
+
+                static bool IsPasteBinValidExtension(string extension)
                 {
-                    var fileType = Path.GetExtension(attachment.Url);
+                    return extension == ".txt" || extension == ".log" || extension == ".cs";
+                }
 
-                    static bool IsPasteBinValidExtension(string extension)
+                static bool IsAttachmentValidExtension(string extension)
+                {
+                    return IsPasteBinValidExtension(extension) || extension == ".zip";
+                }
+
+                const int TenMegaBytes = 10000000;
+                const int attachmentMaxFileSizeInBytes = TenMegaBytes;
+                if (IsAttachmentValidExtension(fileType) && attachment.Size <= attachmentMaxFileSizeInBytes)
+                {
+                    var fileContentStream = await _httpClient.GetStreamAsync(attachment.Url);
+                    var botAnswer = new StringBuilder();
+
+                    string fileContent = null;
+                    if (fileType == ".zip")
                     {
-                        return extension == ".txt" || extension == ".log" || extension == ".cs";
-                    }
-
-                    static bool IsAttachmentValidExtension(string extension)
-                    {
-                        return IsPasteBinValidExtension(extension) || extension == ".zip";
-                    }
-
-                    const int EightMegaBytes = 8000000;
-                    const int attachmentMaxFileSizeInBytes = EightMegaBytes;
-                    if (IsAttachmentValidExtension(fileType) && attachment.Size <= attachmentMaxFileSizeInBytes)
-                    {
-                        var fileContentStream = await _httpClient.GetStreamAsync(attachment.Url);
-                        var botAnswer = new StringBuilder();
-
-                        string fileContent = null;
-                        if (fileType == ".zip")
+                        Logger.Log("Scanning zip attachment");
+                        using (var zipArchive = new ZipArchive(fileContentStream))
                         {
-                            using (var zipArchive = new ZipArchive(fileContentStream))
+                            foreach (var zipArchiveEntry in zipArchive.Entries)
                             {
-                                foreach (var zipArchiveEntry in zipArchive.Entries)
+                                Logger.Log($"Scanning zip entry: {zipArchiveEntry.FullName}");
+
+                                var extension = Path.GetExtension(zipArchiveEntry.Name);
+                                if (IsPasteBinValidExtension(extension))
                                 {
-                                    var extension = Path.GetExtension(zipArchiveEntry.Name);
-                                    if (IsPasteBinValidExtension(extension))
+                                    if (zipArchiveEntry.Length > attachmentMaxFileSizeInBytes)
                                     {
-                                        using var streamReader = new StreamReader(zipArchiveEntry.Open());
-                                        fileContent = streamReader.ReadToEnd();
-                                        break;
+                                        Logger.Log($"Skipping log scanning for file {zipArchiveEntry.Name} because file size is {zipArchiveEntry.Length}, max is {attachmentMaxFileSizeInBytes}");
                                     }
+
+                                    using var streamReader = new StreamReader(zipArchiveEntry.Open());
+                                    fileContent = streamReader.ReadToEnd();
+                                    break;
                                 }
                             }
+                        }
+                    }
+                    else
+                    {
+                        Logger.Log($"Putting file attachment content into a string");
+                        using var streamReader = new StreamReader(fileContentStream);
+                        fileContent = streamReader.ReadToEnd();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(fileContent))
+                    {
+                        using (var context = new IgnoreContext())
+                        {
+                            if (!await context.IsIgnored(msg.Author))
+                            {
+                                CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
+                                await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
+                            }
+                            else
+                            {
+                                Logger.Log($"Message author {msg.Author} is ignored, not scanning attachment");
+                            }
+                        }
+
+                        var pasteResult = await PostBin(fileContent);
+
+                        if (pasteResult.IsSuccess)
+                        {
+                            botAnswer.AppendLine(
+                                $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>");
                         }
                         else
                         {
-                            using var streamReader = new StreamReader(fileContentStream);
-                            fileContent = streamReader.ReadToEnd();
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(fileContent))
-                        {
-                            using (var context = new IgnoreContext())
-                            {
-                                if (!await context.IsIgnored(msg.Author))
-                                {
-                                    CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
-                                    await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
-                                }
-                            }
-
-                            var pasteResult = await PostBin(fileContent);
-
-                            if (pasteResult.IsSuccess)
-                            {
-                                botAnswer.AppendLine(
-                                    $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>");
-                            }
-
-                            return botAnswer.ToString();
+                            Logger.Log("Failed posting log to any hastebin endpoints");
                         }
                     }
+
+                    return botAnswer.ToString();
                 }
             }
 
