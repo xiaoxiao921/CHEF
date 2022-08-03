@@ -133,16 +133,9 @@ public class AutoPastebin
                                 Logger.Log("Failed posting log to any hastebin endpoints");
                             }
                         }
-                        catch (Exception e)
+                        catch
                         {
-                            if (e is not TimeoutException)
-                            {
-                                Logger.Log(e.ToString());
-                            }
-                            else
-                            {
-                                Logger.Log("Failed posting log to any hastebin endpoints within a reasonable amount of time");
-                            }
+                            Logger.Log("Failed posting log to any hastebin endpoints within a reasonable amount of time");
                         }
                     }
 
