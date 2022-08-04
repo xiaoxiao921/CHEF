@@ -119,9 +119,7 @@ public class AutoPastebin
                         Logger.Log("Trying to post file content to pastebin endpoints");
                         try
                         {
-                            var timeout = TimeSpan.FromSeconds(15);
-                            using var cts = new CancellationTokenSource(timeout);
-                            var pasteResult = await PostBin(fileContent).WaitAsync(cts.Token);
+                            var pasteResult = await PostBin(fileContent).WaitAsync(TimeSpan.FromSeconds(15));
                             if (pasteResult.IsSuccess)
                             {
                                 var answer = $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>";
@@ -133,9 +131,9 @@ public class AutoPastebin
                                 Logger.Log("Failed posting log to any hastebin endpoints");
                             }
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            Logger.Log("Failed posting log to any hastebin endpoints within a reasonable amount of time");
+                            Logger.Log(e.ToString());
                         }
                     }
 
