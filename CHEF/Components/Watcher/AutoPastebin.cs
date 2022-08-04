@@ -59,14 +59,14 @@ public class AutoPastebin
                     return IsPasteBinValidExtension(extension) || extension == ".zip";
                 }
 
-                const int TenMiB = 10485760;
-                const int attachmentMaxFileSizeInBytes = TenMiB;
+                const int TwentyMiB = 20971520;
+                const int attachmentMaxFileSizeInBytes = TwentyMiB;
                 if (IsAttachmentValidExtension(fileType) && attachment.Size <= attachmentMaxFileSizeInBytes)
                 {
                     var fileContentStream = await _httpClient.GetStreamAsync(attachment.Url);
                     var botAnswer = new StringBuilder();
 
-                    string fileContent = null;
+                    List<string> fileContents = new();
                     if (fileType == ".zip")
                     {
                         Logger.Log("Scanning zip attachment");
@@ -82,12 +82,13 @@ public class AutoPastebin
                                     if (zipArchiveEntry.Length > attachmentMaxFileSizeInBytes)
                                     {
                                         Logger.Log($"Skipping log scanning for file {zipArchiveEntry.Name} because file size is {zipArchiveEntry.Length}, max is {attachmentMaxFileSizeInBytes}");
+                                        continue;
                                     }
 
                                     Logger.Log("Reading zip entry into a string");
                                     using var entryStream = zipArchiveEntry.Open();
                                     using var streamReader = new StreamReader(entryStream);
-                                    fileContent = streamReader.ReadToEnd();
+                                    fileContents.Add(streamReader.ReadToEnd());
                                     break;
                                 }
                             }
@@ -97,43 +98,54 @@ public class AutoPastebin
                     {
                         Logger.Log($"Putting file attachment content into a string");
                         using var streamReader = new StreamReader(fileContentStream);
-                        fileContent = streamReader.ReadToEnd();
+                        fileContents.Add(streamReader.ReadToEnd());
                     }
 
-                    if (!string.IsNullOrWhiteSpace(fileContent))
+                    foreach (var fileContent in fileContents)
                     {
-                        using (var context = new IgnoreContext())
+                        if (!string.IsNullOrWhiteSpace(fileContent))
                         {
-                            if (!await context.IsIgnored(msg.Author))
+                            using (var context = new IgnoreContext())
                             {
-                                Logger.Log("Scanning log content for common issues");
-                                CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
-                                await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
+                                if (!await context.IsIgnored(msg.Author))
+                                {
+                                    Logger.Log("Scanning log content for common issues");
+                                    CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
+                                    await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
+                                }
+                                else
+                                {
+                                    Logger.Log($"Message author {msg.Author} is ignored, not scanning attachment");
+                                }
                             }
-                            else
-                            {
-                                Logger.Log($"Message author {msg.Author} is ignored, not scanning attachment");
-                            }
-                        }
 
-                        Logger.Log("Trying to post file content to pastebin endpoints");
-                        try
-                        {
-                            var pasteResult = await PostBin(fileContent).WaitAsync(TimeSpan.FromSeconds(15));
-                            if (pasteResult.IsSuccess)
+                            Logger.Log("Trying to post file content to pastebin endpoints");
+                            var postTimeout = TimeSpan.FromSeconds(15);
+                            try
                             {
-                                var answer = $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>";
-                                Logger.Log(answer);
-                                botAnswer.AppendLine(answer);
+                                var pasteResult = await PostBin(fileContent).WaitAsync(postTimeout);
+                                if (pasteResult.IsSuccess)
+                                {
+                                    var answer = $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>";
+                                    Logger.Log(answer);
+                                    botAnswer.AppendLine(answer);
+                                }
+                                else
+                                {
+                                    Logger.Log("Failed posting log to any hastebin endpoints");
+                                }
                             }
-                            else
+                            catch (Exception e)
                             {
-                                Logger.Log("Failed posting log to any hastebin endpoints");
+                                if (e is HttpRequestException)
+                                {
+                                    Logger.Log($"Failed posting log to any hastebin endpoints within a reasonable amount of time ({postTimeout})");
+                                }
+                                else
+                                {
+                                    Logger.Log(e.ToString());
+                                }
                             }
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Log(e.ToString());
                         }
                     }
 
