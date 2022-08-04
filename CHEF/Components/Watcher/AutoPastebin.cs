@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CHEF.Components.Commands.Ignore;
+using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 namespace CHEF.Components.Watcher
@@ -119,33 +120,7 @@ public class AutoPastebin
                                 }
                             }
 
-                            Logger.Log("Trying to post file content to pastebin endpoints");
-                            var postTimeout = TimeSpan.FromSeconds(15);
-                            try
-                            {
-                                var pasteResult = await PostBin(fileContent).WaitAsync(postTimeout);
-                                if (pasteResult.IsSuccess)
-                                {
-                                    var answer = $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>";
-                                    Logger.Log(answer);
-                                    botAnswer.AppendLine(answer);
-                                }
-                                else
-                                {
-                                    Logger.Log("Failed posting log to any hastebin endpoints");
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                if (e is HttpRequestException)
-                                {
-                                    Logger.Log($"Failed posting log to any hastebin endpoints within a reasonable amount of time ({postTimeout})");
-                                }
-                                else
-                                {
-                                    Logger.Log(e.ToString());
-                                }
-                            }
+                            _ = Task.Run(() => PostBin(msg, attachment, fileContent));
                         }
                     }
 
@@ -156,7 +131,38 @@ public class AutoPastebin
             return string.Empty;
         }
 
-        private async Task<HasteBinResult> PostBin(string content)
+        private async Task PostBin(SocketMessage msg, Attachment attachment, string fileContent)
+        {
+            Logger.Log("Trying to post file content to pastebin endpoints");
+            var postTimeout = TimeSpan.FromSeconds(15);
+            try
+            {
+                var pasteResult = await PostBinInternal(fileContent).WaitAsync(postTimeout);
+                if (pasteResult.IsSuccess)
+                {
+                    var answer = $"Automatic pastebin for {msg.Author.Username} {attachment.Filename} file: <{pasteResult.FullUrl}>";
+                    Logger.Log(answer);
+                    await msg.Channel.SendMessageAsync(answer);
+                }
+                else
+                {
+                    Logger.Log("Failed posting log to any hastebin endpoints");
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is HttpRequestException)
+                {
+                    Logger.Log($"Failed posting log to any hastebin endpoints within a reasonable amount of time ({postTimeout})");
+                }
+                else
+                {
+                    Logger.Log(e.ToString());
+                }
+            }
+        }
+
+        private async Task<HasteBinResult> PostBinInternal(string content)
         {
             string siteUrl = "";
             HttpResponseMessage result = null;
