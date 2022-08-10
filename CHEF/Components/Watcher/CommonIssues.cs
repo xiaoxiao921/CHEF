@@ -75,13 +75,13 @@ namespace CHEF.Components.Watcher
                         RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     var matches = rx.Matches(text);
 
+                    var outdatedMods = new StringBuilder();
+                    var deprecatedMods = new StringBuilder();
+
                     foreach (Match match in matches)
                     {
                         if (match.Groups.Count > 2)
                         {
-                            var outdatedMods = new StringBuilder();
-                            var deprecatedMods = new StringBuilder();
-
                             // A log line is like this :
                             // TS Manifest: Random-Team-Name-ModName-1.0.0
 
@@ -99,32 +99,34 @@ namespace CHEF.Components.Watcher
                             {
                                 deprecatedMods.AppendLine($"{modName}");
                             }
-
-                            if (outdatedMods.Length > 0)
-                            {
-                                var outdatedModsS = outdatedMods.ToString();
-                                var plural = outdatedModsS.Count(c => c == '\n') > 1;
-                                answer.AppendLine(
-                                    $"{author.Mention}, you don't have the latest version installed of " +
-                                    $"the following mod{(plural ? "s" : "")}:" + Environment.NewLine +
-                                    outdatedModsS);
-
-                                textContainsAnyBadMod = true;
-                            }
-
-                            if (deprecatedMods.Length > 0)
-                            {
-                                var deprecatedModsS = deprecatedMods.ToString();
-                                var plural = deprecatedModsS.Count(c => c == '\n') > 1;
-                                answer.AppendLine(
-                                    $"{author.Mention}, you have {(plural ? "" : "a")} deprecated " +
-                                    $"mod{(plural ? "s" : "")} installed. Deprecated mods usually don't work:" + Environment.NewLine +
-                                    deprecatedModsS);
-
-                                textContainsAnyBadMod = true;
-                            }
                         }
 
+                    }
+
+                    var notMentionedYet = true;
+                    if (outdatedMods.Length > 0)
+                    {
+                        var outdatedModsS = outdatedMods.ToString();
+                        var plural = outdatedModsS.Count(c => c == '\n') > 1;
+                        answer.AppendLine(
+                            $"{(notMentionedYet ? author.Mention + " y" : "Y")}ou don't have the latest version installed of " +
+                            $"the following mod{(plural ? "s" : "")}:" + Environment.NewLine +
+                            outdatedModsS);
+
+                        textContainsAnyBadMod = true;
+                        notMentionedYet = false;
+                    }
+
+                    if (deprecatedMods.Length > 0)
+                    {
+                        var deprecatedModsS = deprecatedMods.ToString();
+                        var plural = deprecatedModsS.Count(c => c == '\n') > 1;
+                        answer.AppendLine(
+                            $"{(notMentionedYet ? author.Mention + " y" : "Y")}ou have {(plural ? "" : "a")} deprecated " +
+                            $"mod{(plural ? "s" : "")} installed. Deprecated mods usually don't work:" + Environment.NewLine +
+                            deprecatedModsS);
+
+                        textContainsAnyBadMod = true;
                     }
                 }
             }
