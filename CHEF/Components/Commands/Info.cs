@@ -293,59 +293,17 @@ namespace CHEF.Components.Commands
         [Summary
             ("Returns info about wiki pages from the R2Wiki")]
         public async Task WikiSearch(
-            [Remainder] string search = "Home")
+            [Remainder] string search = "")
         {
-            search = search.Trim();
-            var encoded = WebUtility.UrlEncode(search);
-            var url = $"https://github.com/risk-of-thunder/R2Wiki/search?q={encoded}&type=Wikis";
+            const string wikiUrl = "https://risk-of-thunder.github.io/R2Wiki/";
 
-            var web = new HtmlWeb();
-            var document = (await web.LoadFromWebAsync(url)).DocumentNode;
-
-            var wikiResultsParent = document.SelectSingleNode("//div[@id=\"wiki_search_results\"]");
-            if (wikiResultsParent != null)
+            if (string.IsNullOrWhiteSpace(search))
             {
-                var nbOfResultQuery =
-                    document.SelectSingleNode(
-                        "//div[@class=\"d-flex flex-column flex-md-row flex-justify-between border-bottom pb-3 position-relative\"]/h3");
-                var nbOfResult = Regex.Replace(
-                    nbOfResultQuery.FirstChild.GetDirectInnerText(), @"[^\d]", "",
-                    RegexOptions.Compiled);
-
-                var wikiResult =
-                    document.SelectSingleNode(
-                        "//div[@class=\"hx_hit-wiki py-4 border-top\"]");
-
-                const string githubUrl = "https://github.com";
-
-                var aElement = wikiResult.SelectSingleNode("./div[1]/a");
-                var resultTitle = HttpUtility.HtmlDecode(aElement.GetAttributeValue("title", ""));
-                var resultLink =
-                    githubUrl + HttpUtility.HtmlDecode(aElement.GetAttributeValue("href", ""));
-                // redirect to the new github io page wiki
-                var newWikiLink = resultLink.Replace("https://github.com/risk-of-thunder/R2Wiki/wiki", "https://risk-of-thunder.github.io/R2Wiki").Replace("_", "/");
-
-                var resultDescQuery = wikiResult.SelectSingleNode("./p[1]");
-                var resultDesc = HttpUtility.HtmlDecode(resultDescQuery.GetDirectInnerText());
-
-                var lastUpdatedQuery = wikiResult.SelectSingleNode("./div[2]/relative-time");
-                var lastUpdated = lastUpdatedQuery.GetDirectInnerText();
-
-                var embedBuilder = new EmbedBuilder();
-                embedBuilder.WithColor(Color.Orange);
-
-                embedBuilder.WithAuthor("R2Wiki", "https://avatars1.githubusercontent.com/u/49210367", newWikiLink);
-                embedBuilder.WithTitle(resultTitle);
-                embedBuilder.WithUrl(newWikiLink);
-                embedBuilder.WithDescription($"{resultDesc}\n*This page was last updated {lastUpdated}*");
-
-                embedBuilder.AddField($"Other results ({int.Parse(nbOfResult) - 1})", $"[Click here to see the other results]({url})");
-
-                await ReplyAsync("", false, embedBuilder.Build());
+                await ReplyAsync(wikiUrl);
             }
             else
             {
-                await ReplyAsync($"No result in the wiki for {search}.");
+                await ReplyAsync("Use the search bar top right of this page: " + wikiUrl);
             }
         }
     }
