@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using CHEF.Components.Commands.Ignore;
 using Discord;
@@ -60,71 +59,86 @@ public class AutoPastebin
                     return IsPasteBinValidExtension(extension) || extension == ".zip";
                 }
 
-                const int TwentyMiB = 20971520;
-                const int attachmentMaxFileSizeInBytes = TwentyMiB;
-                if (IsAttachmentValidExtension(fileType) && attachment.Size <= attachmentMaxFileSizeInBytes)
+                const int FiftyMiB = 52428800;
+                const int attachmentMaxFileSizeInBytes = FiftyMiB;
+                if (IsAttachmentValidExtension(fileType))
                 {
-                    var fileContentStream = await _httpClient.GetStreamAsync(attachment.Url);
-                    var botAnswer = new StringBuilder();
-
-                    List<string> fileContents = new();
-                    if (fileType == ".zip")
+                    if (attachment.Size <= attachmentMaxFileSizeInBytes)
                     {
-                        Logger.Log("Scanning zip attachment");
-                        using (var zipArchive = new ZipArchive(fileContentStream))
+                        var fileContentStream = await _httpClient.GetStreamAsync(attachment.Url);
+                        var botAnswer = new StringBuilder();
+
+                        List<string> fileContents = new();
+                        if (fileType == ".zip")
                         {
-                            foreach (var zipArchiveEntry in zipArchive.Entries)
+                            Logger.Log("Scanning zip attachment");
+                            using (var zipArchive = new ZipArchive(fileContentStream))
                             {
-                                Logger.Log($"Scanning zip entry: {zipArchiveEntry.FullName}");
-
-                                var extension = Path.GetExtension(zipArchiveEntry.Name);
-                                if (IsPasteBinValidExtension(extension))
+                                foreach (var zipArchiveEntry in zipArchive.Entries)
                                 {
-                                    if (zipArchiveEntry.Length > attachmentMaxFileSizeInBytes)
-                                    {
-                                        Logger.Log($"Skipping log scanning for file {zipArchiveEntry.Name} because file size is {zipArchiveEntry.Length}, max is {attachmentMaxFileSizeInBytes}");
-                                        continue;
-                                    }
+                                    Logger.Log($"Scanning zip entry: {zipArchiveEntry.FullName}");
 
-                                    Logger.Log("Reading zip entry into a string");
-                                    using var entryStream = zipArchiveEntry.Open();
-                                    using var streamReader = new StreamReader(entryStream);
-                                    fileContents.Add(streamReader.ReadToEnd());
-                                    break;
+                                    var extension = Path.GetExtension(zipArchiveEntry.Name);
+                                    if (IsPasteBinValidExtension(extension))
+                                    {
+                                        if (zipArchiveEntry.Length > attachmentMaxFileSizeInBytes)
+                                        {
+                                            Logger.Log($"Skipping log scanning for file {zipArchiveEntry.Name} because file size is {zipArchiveEntry.Length}, max is {attachmentMaxFileSizeInBytes}");
+                                            continue;
+                                        }
+
+                                        Logger.Log("Reading zip entry into a string");
+                                        using var entryStream = zipArchiveEntry.Open();
+                                        using var streamReader = new StreamReader(entryStream);
+                                        fileContents.Add(streamReader.ReadToEnd());
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        else
+                        {
+                            Logger.Log($"Putting file attachment content into a string");
+                            using var streamReader = new StreamReader(fileContentStream);
+                            fileContents.Add(streamReader.ReadToEnd());
+                        }
+
+                        foreach (var fileContent in fileContents)
+                        {
+                            if (!string.IsNullOrWhiteSpace(fileContent))
+                            {
+                                var alreadyPostedBin = false;
+
+                                using (var context = new IgnoreContext())
+                                {
+                                    if (!await context.IsIgnored(msg.Author))
+                                    {
+                                        Logger.Log("Scanning log content for common issues");
+                                        CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
+                                        await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
+
+                                        var noDuplicateFileContent = CommonIssues.RemoveDuplicateExceptionsFromText(fileContent);
+
+                                        _ = Task.Run(() => PostBin(msg, attachment, noDuplicateFileContent));
+                                        alreadyPostedBin = true;
+                                    }
+                                    else
+                                    {
+                                        Logger.Log($"Message author {msg.Author} is ignored, not scanning attachment");
+                                    }
+                                }
+
+                                if (!alreadyPostedBin)
+                                    _ = Task.Run(() => PostBin(msg, attachment, fileContent));
+                            }
+                        }
+
+                        return botAnswer.ToString();
                     }
                     else
                     {
-                        Logger.Log($"Putting file attachment content into a string");
-                        using var streamReader = new StreamReader(fileContentStream);
-                        fileContents.Add(streamReader.ReadToEnd());
+                        return "That file is quite large, if you want it to be scanned by CHEF for common log errors, please relaunch the game and exit as soon as you hit the main menu screen, it will prevent the file from getting a lot bigger than needed.";
                     }
-
-                    foreach (var fileContent in fileContents)
-                    {
-                        if (!string.IsNullOrWhiteSpace(fileContent))
-                        {
-                            using (var context = new IgnoreContext())
-                            {
-                                if (!await context.IsIgnored(msg.Author))
-                                {
-                                    Logger.Log("Scanning log content for common issues");
-                                    CommonIssues.CheckCommonLogError(fileContent, botAnswer, msg.Author);
-                                    await CommonIssues.CheckForOutdatedAndDeprecatedMods(fileContent, botAnswer, msg.Author);
-                                }
-                                else
-                                {
-                                    Logger.Log($"Message author {msg.Author} is ignored, not scanning attachment");
-                                }
-                            }
-
-                            _ = Task.Run(() => PostBin(msg, attachment, fileContent));
-                        }
-                    }
-
-                    return botAnswer.ToString();
                 }
             }
 

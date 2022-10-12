@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -65,7 +66,7 @@ namespace CHEF.Components.Watcher
         {
             var textContainsAnyBadMod = false;
 
-            if (text != null)
+            if (!string.IsNullOrWhiteSpace(text))
             {
                 const string ThunderstoreManifestPrefix = "TS Manifest: ";
                 if (text.Contains(ThunderstoreManifestPrefix, StringComparison.InvariantCultureIgnoreCase))
@@ -132,6 +133,44 @@ namespace CHEF.Components.Watcher
             }
 
             return textContainsAnyBadMod;
+        }
+
+        public static string RemoveDuplicateExceptionsFromText(string text)
+        {
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                using (var stringReader = new StringReader(text))
+                {
+                    var isLinePartOfAnException = false;
+
+                    HashSet<string> exceptions = new();
+                    StringBuilder linesSb = new();
+
+                    string line;
+                    while ((line = stringReader.ReadLine()) != null)
+                    {
+                        if (line.Contains("Exception:", StringComparison.InvariantCulture))
+                        {
+                            isLinePartOfAnException = true;
+                        }
+                        else if (line.StartsWith('[') &&
+                                line.Contains(':', StringComparison.InvariantCulture) &&
+                                line.Contains(']', StringComparison.InvariantCulture))
+                        {
+                            isLinePartOfAnException = false;
+                        }
+
+                        if (!isLinePartOfAnException || exceptions.Add(line))
+                        {
+                            linesSb.AppendLine(line);
+                        }
+                    }
+
+                    return linesSb.ToString();
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
