@@ -119,7 +119,11 @@ public class AutoPastebin
 
                                         var noDuplicateFileContent = CommonIssues.RemoveDuplicateExceptionsFromText(fileContent);
 
-                                        _ = Task.Run(() => PostBin(msg, attachment, noDuplicateFileContent));
+                                        var postBinTask = Task.Run(() => PostBin(msg, attachment, noDuplicateFileContent).ContinueWith(
+                                            async (t) =>
+                                            {
+                                                await msg.Channel.SendMessageAsync("This file only contains the first occurences of the exceptions, the others occurences were removed for file size reasons.");
+                                            }));
                                         alreadyPostedBin = true;
                                     }
                                     else
