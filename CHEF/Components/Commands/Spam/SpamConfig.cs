@@ -28,6 +28,8 @@ namespace CHEF.Components.Commands.Spam
                 embedBuilder.AddField(nameof(SpamFilterConfig.MessagesForAction), config.MessagesForAction.ToString());
                 embedBuilder.AddField(nameof(SpamFilterConfig.MessageSecondsGap), config.MessageSecondsGap.ToString());
                 embedBuilder.AddField(nameof(SpamFilterConfig.IncludeMessageContentInLog), config.IncludeMessageContentInLog.ToString());
+                embedBuilder.AddField(nameof(SpamFilterConfig.AttachmentCountForSpam), config.AttachmentCountForSpam.ToString());
+                embedBuilder.AddField(nameof(SpamFilterConfig.EmbedCountForSpam), config.EmbedCountForSpam.ToString());
                 await ReplyAsync("", false, embedBuilder.Build());
             }
         }
@@ -89,6 +91,22 @@ namespace CHEF.Components.Commands.Spam
                             includeMessageContentInLog = includeMessageContentInLogInt == 1;
                         }
                         config.IncludeMessageContentInLog = includeMessageContentInLog;
+                        break;
+                    case "attachmentcountforspam":
+                        if (!int.TryParse(value, out var attachmentCountforSpam) || attachmentCountforSpam < 1)
+                        {
+                            await ReplyAsync($"Value should be an integer and more than 0");
+                            return;
+                        }
+                        config.AttachmentCountForSpam = attachmentCountforSpam;
+                        break;
+                    case "embedcountforspam":
+                        if (!int.TryParse(value, out var embedCountForSpam) || embedCountForSpam < 1)
+                        {
+                            await ReplyAsync($"Value should be an integer and more than 0");
+                            return;
+                        }
+                        config.EmbedCountForSpam = embedCountForSpam;
                         break;
                     default:
                         await ReplyAsync($"**{fieldName}** is not a valid field");

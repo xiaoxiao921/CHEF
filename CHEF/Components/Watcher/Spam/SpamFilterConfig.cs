@@ -11,5 +11,7 @@ namespace CHEF.Components.Watcher.Spam
         public int MessagesForAction { get; set; }
         public int MessageSecondsGap { get; set; }
         public bool IncludeMessageContentInLog { get; set; }
+        public int AttachmentCountForSpam { get; set; }
+        public int EmbedCountForSpam { get; set; }
     }
 }
