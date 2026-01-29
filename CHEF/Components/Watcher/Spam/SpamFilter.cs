@@ -132,13 +132,13 @@ namespace CHEF.Components.Watcher.Spam
                 using (var md5 = new HMACMD5(md5Key))
                 {
                     var builder = new StringBuilder(msg.Content);
-                    foreach (var attachment in msg.Attachments)
+                    if (msg.Attachments.Count >= config.AttachmentCountForSpam)
                     {
-                        builder.Append(attachment.Url);
+                        builder.Append($" {msg.Attachments.Count} attachments");
                     }
-                    foreach (var embed in msg.Embeds)
+                    if (msg.Embeds.Count >= config.EmbedCountForSpam)
                     {
-                        builder.Append(embed.Title).Append(embed.Description).Append(embed.Footer).Append(embed.Url);
+                        builder.Append($" {msg.Attachments.Count} embeds");
                     }
 
                     var hash = new HashResult(md5.ComputeHash(Encoding.UTF8.GetBytes(builder.ToString())));
