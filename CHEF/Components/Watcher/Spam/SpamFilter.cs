@@ -136,9 +136,24 @@ namespace CHEF.Components.Watcher.Spam
                     {
                         builder.Append($" {msg.Attachments.Count} attachments");
                     }
+                    else
+                    {
+                        foreach (var attachment in msg.Attachments)
+                        {
+                            builder.Append(attachment.Url);
+                        }
+                    }
+
                     if (msg.Embeds.Count >= config.EmbedCountForSpam)
                     {
                         builder.Append($" {msg.Attachments.Count} embeds");
+                    }
+                    else
+                    {
+                        foreach (var embed in msg.Embeds)
+                        {
+                            builder.Append(embed.Title).Append(embed.Description).Append(embed.Footer).Append(embed.Url);
+                        }
                     }
 
                     var hash = new HashResult(md5.ComputeHash(Encoding.UTF8.GetBytes(builder.ToString())));
