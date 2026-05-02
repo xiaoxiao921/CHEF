@@ -30,6 +30,7 @@ namespace CHEF.Components.Commands.Spam
                 embedBuilder.AddField(nameof(SpamFilterConfig.IncludeMessageContentInLog), config.IncludeMessageContentInLog.ToString());
                 embedBuilder.AddField(nameof(SpamFilterConfig.AttachmentCountForSpam), config.AttachmentCountForSpam.ToString());
                 embedBuilder.AddField(nameof(SpamFilterConfig.EmbedCountForSpam), config.EmbedCountForSpam.ToString());
+                embedBuilder.AddField(nameof(SpamFilterConfig.TimeoutDuration), config.TimeoutDuration.ToString());
                 await ReplyAsync("", false, embedBuilder.Build());
             }
         }
@@ -107,6 +108,14 @@ namespace CHEF.Components.Commands.Spam
                             return;
                         }
                         config.EmbedCountForSpam = embedCountForSpam;
+                        break;
+                    case "timeoutduration":
+                        if (!int.TryParse(value, out var timeoutDuration) || timeoutDuration < 1)
+                        {
+                            await ReplyAsync($"Value should be an integer and more than 0");
+                            return;
+                        }
+                        config.TimeoutDuration = timeoutDuration;
                         break;
                     default:
                         await ReplyAsync($"**{fieldName}** is not a valid field");

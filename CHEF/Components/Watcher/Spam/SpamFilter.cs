@@ -201,6 +201,12 @@ namespace CHEF.Components.Watcher.Spam
 
                                 await guild.AddBanAsync(author, 1, auditReason);
                                 break;
+                            case ActionOnSpam.Timeout:
+                                Logger.Log($"Spam timeout user {guildUser.Nickname} : {auditReason}");
+
+                                await guildUser.SetTimeOutAsync(TimeSpan.FromDays(config.TimeoutDuration), new RequestOptions { AuditLogReason = auditReason });
+                                await DeleteUserMessages(guild, guildUser, config);
+                                break;
                         }
                         return true;
                     }

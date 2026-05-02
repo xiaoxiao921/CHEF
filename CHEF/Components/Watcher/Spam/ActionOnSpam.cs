@@ -9,5 +9,6 @@ namespace CHEF.Components.Watcher.Spam
         Mute,
         Kick,
         Ban,
+        Timeout,
     }
 }

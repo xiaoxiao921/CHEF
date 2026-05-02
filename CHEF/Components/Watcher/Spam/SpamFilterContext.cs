@@ -51,6 +51,9 @@ namespace CHEF.Components.Watcher.Spam
                 MessageSecondsGap = 15,
                 IncludeMessageContentInLog = true,
                 MuteRoleId = 0,
+                AttachmentCountForSpam = 4,
+                EmbedCountForSpam = 4,
+                TimeoutDuration = 7
             };
         }
 

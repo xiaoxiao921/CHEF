@@ -13,5 +13,6 @@ namespace CHEF.Components.Watcher.Spam
         public bool IncludeMessageContentInLog { get; set; }
         public int AttachmentCountForSpam { get; set; }
         public int EmbedCountForSpam { get; set; }
+        public int TimeoutDuration { get; set; }
     }
 }
