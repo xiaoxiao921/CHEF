@@ -72,7 +72,7 @@ namespace CHEF.Components.Commands
 
         [Command("list")]
         [Alias("l", "ls")]
-        [Summary("Removes a role from ignore list of a spam filter.")]
+        [Summary("List of ignored roles of a spam filter.")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task SpamIgnoreList()
         {
