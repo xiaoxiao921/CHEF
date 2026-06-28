@@ -73,7 +73,7 @@ namespace CHEF.Components.Commands
                         }
                         catch (Exception exception)
                         {
-                            Logger.Log(exception.ToString());
+                            Logger.Log(exception);
                         }
                     }
                 }

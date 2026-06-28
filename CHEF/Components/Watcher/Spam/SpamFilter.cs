@@ -214,7 +214,7 @@ namespace CHEF.Components.Watcher.Spam
             }
             catch (Exception e)
             {
-                Logger.Log(e.ToString());
+                Logger.Log(e);
             }
             return false;
         }
@@ -250,7 +250,7 @@ namespace CHEF.Components.Watcher.Spam
                 }
                 catch (Exception e)
                 {
-                    Logger.Log(e.ToString());
+                    Logger.Log(e);
                 }
             }
         }

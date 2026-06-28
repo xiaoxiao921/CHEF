@@ -9,20 +9,21 @@ namespace CHEF
     {
         private const string LogPrefix = "[CHEF]";
 
-        internal static void Log(string msg)
+        internal static void Log(
+            object msg,
+            [CallerMemberName] string member = "",
+            [CallerFilePath] string file = "",
+            [CallerLineNumber] int line = 0
+        )
         {
-            var log = $"{LogPrefix} {msg}";
+            var fileName = Path.GetFileName(file);
+            var log = $"{LogPrefix} [{fileName}:{line} {member}] {msg}";
 
             using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN")))
             {
                 Console.WriteLine(log);
                 SentrySdk.CaptureMessage(log);
             }
-        }
-
-        internal static void LogClassInit([CallerFilePath]string filePath = "")
-        {
-            Log($"Initializing {Path.GetFileNameWithoutExtension(filePath)}");
         }
     }
 }
