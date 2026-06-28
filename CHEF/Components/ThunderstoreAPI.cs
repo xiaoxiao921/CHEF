@@ -7,30 +7,33 @@ using Newtonsoft.Json;
 
 namespace CHEF.Components
 {
-    public class PackageV1
+    public class ListingResponse
+    {
+        [JsonProperty("results")]
+        public Package[] Results { get; set; }
+    }
+
+    public class Package
     {
         [JsonProperty("name")]
         public string Name { get; set; }
 
-        [JsonProperty("full_name")]
-        public string FullName { get; set; }
+        [JsonProperty("namespace")]
+        public string Namespace { get; set; }
 
-        [JsonProperty("owner")]
-        public string Owner { get; set; }
+        [JsonProperty("description")]
+        public string Description { get; set; }
 
-        [JsonProperty("package_url")]
-        public Uri PackageUrl { get; set; }
+        [JsonProperty("icon_url")]
+        public string IconUrl { get; set; }
 
-        [JsonProperty("date_created")]
+        [JsonProperty("datetime_created")]
         public DateTimeOffset DateCreated { get; set; }
 
-        [JsonProperty("date_updated")]
+        [JsonProperty("last_updated")]
         public DateTimeOffset DateUpdated { get; set; }
 
-        [JsonProperty("uuid4")]
-        public Guid Uuid4 { get; set; }
-
-        [JsonProperty("rating_score")]
+        [JsonProperty("rating_count")]
         public long RatingScore { get; set; }
 
         [JsonProperty("is_pinned")]
@@ -39,63 +42,31 @@ namespace CHEF.Components
         [JsonProperty("is_deprecated")]
         public bool IsDeprecated { get; set; }
 
-        [JsonProperty("has_nsfw_content")]
+        [JsonProperty("is_nsfw")]
         public bool HasNsfwContent { get; set; }
 
         [JsonProperty("categories")]
-        public string[] Categories { get; set; }
+        public Category[] Categories { get; set; }
 
-        [JsonProperty("versions")]
-        public VersionV1[] Versions { get; set; }
+        [JsonProperty("download_count")]
+        public long DownloadCount { get; set; }
 
-        public VersionV1 LatestPackage() => Versions[0];
-        public long TotalDownloads() => Versions.Sum(version => version.Downloads);
+        public string PackageUrl() => $"https://thunderstore.io/c/riskofrain2/p/{Namespace}/{Name}/";
         public bool IsNsfw() => HasNsfwContent ||
-                                Categories.Any(category => category.ToLowerInvariant().Contains("nsfw"));
+                                Categories.Any(category => category.Name.Contains("nsfw", StringComparison.OrdinalIgnoreCase));
     }
 
-    public class VersionV1
+    public class Category
     {
         [JsonProperty("name")]
         public string Name { get; set; }
-
-        [JsonProperty("full_name")]
-        public string FullName { get; set; }
-
-        [JsonProperty("description")]
-        public string Description { get; set; }
-
-        [JsonProperty("icon")]
-        public Uri Icon { get; set; }
-
-        [JsonProperty("version_number")]
-        public string VersionNumber { get; set; }
-
-        [JsonProperty("dependencies")]
-        public object[] Dependencies { get; set; }
-
-        [JsonProperty("download_url")]
-        public Uri DownloadUrl { get; set; }
-
-        [JsonProperty("downloads")]
-        public long Downloads { get; set; }
-
-        [JsonProperty("date_created")]
-        public DateTimeOffset DateCreated { get; set; }
-
-        [JsonProperty("website_url")]
-        public Uri WebsiteUrl { get; set; }
-
-        [JsonProperty("is_active")]
-        public bool IsActive { get; set; }
-
-        [JsonProperty("uuid4")]
-        public Guid Uuid4 { get; set; }
     }
 
     public static class Thunderstore
     {
-        private const string ApiUrl = "https://thunderstore.io/api/v1/package/";
+        private const string RoR2Community = "riskofrain2";
+        private const string ModsSectionId = "017857cd-10d0-5372-c2de-7f75f6ca3e95";
+        private const string ApiUrl = $"https://thunderstore.io/api/cyberstorm/listing/{RoR2Community}/?section={ModsSectionId}";
 
         public const string IsDownMessage = "Couldn't retrieve mod information, Thunderstore API is down. (Try again in 5-10 minutes)";
         public const string IsUpMessage = "The Thunderstore API is up.";
@@ -106,36 +77,12 @@ namespace CHEF.Components
         };
         private static readonly HttpClient _httpClient = new(_httpClientHandler);
 
-        private static readonly TimeSpan _cacheRefreshInterval = TimeSpan.FromMinutes(5);
-        private static DateTime _lastCacheTime;
-        private static PackageV1[] _packageCache = null;
-
-        public static async Task<PackageV1> GetModInfoV1(string modName)
+        public static async Task<Package> GetModInfoV1(string modName)
         {
-            var timeNow = DateTime.Now;
-            if (_packageCache == null || timeNow - _lastCacheTime >= _cacheRefreshInterval)
-            {
-                _packageCache = JsonConvert.DeserializeObject<PackageV1[]>(await _httpClient.GetStringAsync(ApiUrl));
-                _lastCacheTime = timeNow;
-            }
+            var url = $"{ApiUrl}&q={Uri.EscapeDataString(modName)}";
+            var response = JsonConvert.DeserializeObject<ListingResponse>(await _httpClient.GetStringAsync(url));
 
-            return TryFindModFromCache(modName);
-        }
-
-        // Various queries for trying to find the package the user needs.
-        private static PackageV1 TryFindModFromCache(string modName)
-        {
-            var mod = _packageCache.FirstOrDefault(package => package.Name.Equals(modName, StringComparison.OrdinalIgnoreCase));
-            if (mod == null)
-            {
-                mod = _packageCache.FirstOrDefault(package => package.Name.Contains(modName, StringComparison.OrdinalIgnoreCase));
-            }
-            if (mod == null)
-            {
-                mod = _packageCache.FirstOrDefault(package => package.FullName.Contains(modName, StringComparison.OrdinalIgnoreCase));
-            }
-
-            return mod;
+            return response.Results?.FirstOrDefault();
         }
     }
 }

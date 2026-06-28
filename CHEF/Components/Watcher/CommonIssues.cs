@@ -183,6 +183,9 @@ namespace CHEF.Components.Watcher
         /// <returns></returns>
         private static async Task<(string, bool)> IsThisLatestModVersion(string modName, string verFromText)
         {
+#warning TODO: fix or remove
+            return default;
+            /*
             var modInfo = await Thunderstore.GetModInfoV1(modName);
             if (modInfo != null)
             {
@@ -196,6 +199,7 @@ namespace CHEF.Components.Watcher
             }
 
             return (null, false);
+            */
         }
     }
 }

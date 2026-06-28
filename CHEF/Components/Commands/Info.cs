@@ -183,47 +183,15 @@ namespace CHEF.Components.Commands
             [Summary("The mod to get info from")]
             [Remainder] string modName)
         {
-            // Try finding the mod with whitespace replaced by underscore (TS UI replace packages underscores are replaced by whitespaces)
-            var modNameWithUnderscoreInsteadOfWhiteSpace = modName.Replace(' ', '_');
-            PackageV1 modInfo;
+            Package modInfo;
             try
             {
-                modInfo = await Thunderstore.GetModInfoV1(modNameWithUnderscoreInsteadOfWhiteSpace);
+                modInfo = await Thunderstore.GetModInfoV1(modName);
             }
             catch (JsonSerializationException)
             {
                 await ReplyAsync(Thunderstore.IsDownMessage);
                 return;
-            }
-
-            // Try again but with whitespace totally removed
-            if (modInfo == null)
-            {
-                var modNameWithNoWhiteSpace = modName.Replace(" ", "");
-                try
-                {
-                    modInfo = await Thunderstore.GetModInfoV1(modNameWithNoWhiteSpace);
-                }
-                catch (JsonSerializationException)
-                {
-                    await ReplyAsync(Thunderstore.IsDownMessage);
-                    return;
-                }
-            }
-
-            // Try again but with underscore totally removed
-            if (modInfo == null)
-            {
-                var modNameWithNoWhiteSpace = modName.Replace("_", "");
-                try
-                {
-                    modInfo = await Thunderstore.GetModInfoV1(modNameWithNoWhiteSpace);
-                }
-                catch (JsonSerializationException)
-                {
-                    await ReplyAsync(Thunderstore.IsDownMessage);
-                    return;
-                }
             }
 
             if (modInfo == null)
@@ -237,11 +205,11 @@ namespace CHEF.Components.Commands
             var pinkColor = new Color(255, 20, 147);
             embedBuilder.WithColor(modInfo.IsDeprecated ? Color.Red : modInfo.IsNsfw() ? pinkColor : Color.Green);
 
-            embedBuilder.WithAuthor(modInfo.Owner);
-            embedBuilder.WithTitle($"{modInfo.Name} v{modInfo.LatestPackage().VersionNumber}");
-            embedBuilder.WithUrl(modInfo.PackageUrl.AbsoluteUri);
-            embedBuilder.WithDescription(modInfo.LatestPackage().Description);
-            embedBuilder.WithThumbnailUrl(modInfo.LatestPackage().Icon.AbsoluteUri);
+            embedBuilder.WithAuthor(modInfo.Namespace);
+            embedBuilder.WithTitle(modInfo.Name);
+            embedBuilder.WithUrl(modInfo.PackageUrl());
+            embedBuilder.WithDescription(modInfo.Description);
+            embedBuilder.WithThumbnailUrl(modInfo.IconUrl);
 
             if (modInfo.IsDeprecated)
             {
@@ -250,7 +218,7 @@ namespace CHEF.Components.Commands
 
             if (modInfo.Categories != null)
             {
-                var categoriesString = string.Join(", ", modInfo.Categories);
+                var categoriesString = string.Join(", ", modInfo.Categories.Select(c => c.Name));
                 if (!string.IsNullOrEmpty(categoriesString))
                 {
                     embedBuilder.AddField("Categories", categoriesString);
@@ -258,10 +226,10 @@ namespace CHEF.Components.Commands
             }
 
             embedBuilder.AddField("Rating Score", modInfo.RatingScore, true);
-            embedBuilder.AddField("Total downloads", modInfo.TotalDownloads(), true);
+            embedBuilder.AddField("Total downloads", modInfo.DownloadCount, true);
 
             embedBuilder.WithFooter(new EmbedFooterBuilder { Text = "Last updated:" });
-            embedBuilder.WithTimestamp(modInfo.LatestPackage().DateCreated);
+            embedBuilder.WithTimestamp(modInfo.DateUpdated);
 
             await ReplyAsync("", false, embedBuilder.Build());
         }
@@ -272,7 +240,7 @@ namespace CHEF.Components.Commands
         [Alias("apidown")]
         public async Task ThunderstoreAPIInfo()
         {
-            PackageV1 modInfo;
+            Package modInfo;
             try
             {
                 modInfo = await Thunderstore.GetModInfoV1("bepin");
