@@ -73,7 +73,7 @@ namespace CHEF.Components.Commands
 
                 // We can also log this incident
                 Logger.Log($"{cmdException.Context.User} failed to execute '{cmdException.Command.Name}' in {cmdException.Context.Channel}.");
-                Logger.Log(cmdException.ToString());
+                Logger.Log(cmdException);
             }
             else
             {

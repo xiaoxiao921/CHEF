@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
 using CHEF.Components.Commands.Ignore;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using HtmlAgilityPack;
 using Newtonsoft.Json;
 
 namespace CHEF.Components.Commands
@@ -186,7 +182,7 @@ namespace CHEF.Components.Commands
             Package modInfo;
             try
             {
-                modInfo = await Thunderstore.GetModInfoV1(modName);
+                modInfo = await Thunderstore.GetModInfoCyberstorm(modName);
             }
             catch (JsonSerializationException)
             {
@@ -243,7 +239,7 @@ namespace CHEF.Components.Commands
             Package modInfo;
             try
             {
-                modInfo = await Thunderstore.GetModInfoV1("bepin");
+                modInfo = await Thunderstore.GetModInfoCyberstorm("bepin");
             }
             catch (JsonSerializationException)
             {

@@ -47,7 +47,7 @@ namespace CHEF
 
         private static Task Log(LogMessage msg)
         {
-            Logger.Log(msg.ToString());
+            Logger.Log(msg);
             return Task.CompletedTask;
         }
     }
