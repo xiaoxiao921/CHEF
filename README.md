@@ -53,20 +53,6 @@ This will also ensure the database is in sync with what you have in code.
 
 If any further changes are made to the table, you should simply do it by editing the fields of your class directly, and then simply create a new migration.
 
-## Image Recognition through Yandex and Google Cloud Vision API for OCR
-
-The bot requires a Google Cloud Account with the Vision API activated (you will need to have your billing information filled)
-
-You will need to have a `json` file containing your credentials for the service account.
-
-Please check those links for more information on how to setup this :
-
-https://cloud.google.com/vision/docs/before-you-begin
-
-https://cloud.google.com/vision/docs/libraries
-
-Note that when first created, your account should be setup as a free account, the first 1k OCR API requests will be free of charge.
-
 ## Install Instructions
 
 Clone the repository:
@@ -83,14 +69,6 @@ $ cp .env.template .env
 ```
 
 Insert your Discord token and PostgreSQL credentials from this fresh .env file.
-
-If you have followed the links above for setting up your Google Cloud Service, you now have with you a .json file containing your credentials.
-
-The next step is to encode the content of this file with base64. 
-
-The content will be decoded and used to connect to your service when doing OCR.
-
-Insert the base64 string for the `GOOGLE_SERVICE_CREDENTIALS_B64` environment variable in the .env file.
 
 Finally, `docker-compose up` to launch the chef container.
 

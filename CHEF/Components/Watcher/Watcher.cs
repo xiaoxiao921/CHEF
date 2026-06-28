@@ -51,18 +51,6 @@ namespace CHEF.Components.Watcher
                         return;
                     }
 
-#warning TODO: fix or remove
-                    /*
-                    var pasteBinRes = await _autoPastebin.Try(msg);
-
-                    if (!string.IsNullOrEmpty(pasteBinRes))
-                        await msg.Channel.SendMessageAsync(pasteBinRes);
-
-                    var yandexRes = await _imageParser.Try(msg);//.WithTimeout(TimeSpan.FromSeconds(10), CancellationToken.None);
-
-                    if (!string.IsNullOrEmpty(yandexRes))
-                        await msg.Channel.SendMessageAsync(yandexRes);
-                    */
 
                     if (msg.Content.Length < 26 && ContainsAny(msg.Content, "can i ask", "can someone help", "can anyone help"))
                     {
