@@ -55,6 +55,9 @@ namespace CHEF.Components.Watcher
 
                 var tasks = matches.Cast<Match>().Select(async match =>
                 {
+                    // A log line is like this :
+                    // TS Manifest: Random-Team-Name-ModName-1.0.0
+
                     if (match.Groups.Count <= 2)
                         return;
 
