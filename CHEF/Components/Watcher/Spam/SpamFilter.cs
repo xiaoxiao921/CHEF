@@ -10,6 +10,14 @@ using System.Timers;
 
 namespace CHEF.Components.Watcher.Spam
 {
+    public static class GuildUserExtension
+    {
+        public static string UsernameAndDiscriminator(this SocketGuildUser user)
+        {
+            return user.Username + "#" + user.Discriminator;
+        }
+    }
+
     public class SpamFilter
     {
         //For the purpose of this class doesn't matter what the key as long as it's the same one
@@ -171,6 +179,8 @@ namespace CHEF.Components.Watcher.Spam
 
                     if (info.count >= config.MessagesForAction)
                     {
+                        var usernameAndDiscriminator = guildUser.UsernameAndDiscriminator();
+
                         string auditReason = GetAuditActionReason(config, msg);
                         switch (config.ActionOnSpam)
                         {
@@ -184,25 +194,25 @@ namespace CHEF.Components.Watcher.Spam
                                 }
                                 else
                                 {
-                                    var logMsg = $"Adding mute role to {guildUser.Nickname} : {auditReason}";
+                                    var logMsg = $"Adding mute role to {usernameAndDiscriminator} : {auditReason}";
                                     Logger.Log(logMsg);
                                     await guildUser.AddRoleAsync(config.MuteRoleId, new RequestOptions { AuditLogReason = auditReason });
                                 }
                                 await DeleteUserMessages(guild, guildUser, config);
                                 break;
                             case ActionOnSpam.Kick:
-                                Logger.Log($"Spam kick user {guildUser.Nickname} : {auditReason}");
+                                Logger.Log($"Kick {usernameAndDiscriminator} : {auditReason}");
 
                                 await guildUser.KickAsync(auditReason);
                                 await DeleteUserMessages(guild, guildUser, config);
                                 break;
                             case ActionOnSpam.Ban:
-                                Logger.Log($"Spam Ban user {guildUser.Nickname} : {auditReason}");
+                                Logger.Log($"Ban {usernameAndDiscriminator} : {auditReason}");
 
                                 await guild.AddBanAsync(author, 1, auditReason);
                                 break;
                             case ActionOnSpam.Timeout:
-                                Logger.Log($"Spam timeout user {guildUser.Nickname} : {auditReason}");
+                                Logger.Log($"Timeout {usernameAndDiscriminator} : {auditReason}");
 
                                 await guildUser.SetTimeOutAsync(TimeSpan.FromDays(config.TimeoutDuration), new RequestOptions { AuditLogReason = auditReason });
                                 await DeleteUserMessages(guild, guildUser, config);
