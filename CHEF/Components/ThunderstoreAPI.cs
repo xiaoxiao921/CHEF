@@ -99,14 +99,19 @@ public static class Thunderstore
     };
     private static readonly HttpClient _httpClient = new(_httpClientHandler);
 
-    public static async Task<Package> GetModInfoCyberstorm(string modName)
+    private static async Task<Package> GetModInfoCyberstormInternal(string url, string modName)
     {
         try
         {
-            var url = $"{ApiUrl}&q={Uri.EscapeDataString(modName)}&nsfw=true&deprecated=true";
-            var response = JsonConvert.DeserializeObject<ListingResponse>(await _httpClient.GetStringAsync(url));
+            var json = await _httpClient.GetStringAsync(url);
+            var response = JsonConvert.DeserializeObject<ListingResponse>(json);
 
-            return response.Results?.FirstOrDefault();
+            var exactModNameMatch = response.Results.FirstOrDefault(p => p.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
+            if (exactModNameMatch != null)
+            {
+                return exactModNameMatch;
+            }
+            return response.Results.FirstOrDefault();
         }
         catch (Exception e)
         {
@@ -116,22 +121,13 @@ public static class Thunderstore
         }
     }
 
+    public static async Task<Package> GetModInfoCyberstorm(string modName)
+    {
+        return await GetModInfoCyberstormInternal($"{ApiUrl}&q={Uri.EscapeDataString(modName)}&nsfw=true&deprecated=true", modName);
+    }
+
     public static async Task<Package> GetModInfoCyberstormWithTeam(string modTeam, string modName)
     {
-        try
-        {
-            var url = $"{ApiUrlWithAuthor(modTeam)}&q={Uri.EscapeDataString(modName)}&nsfw=true&deprecated=true";
-
-            var json = await _httpClient.GetStringAsync(url);
-            var response = JsonConvert.DeserializeObject<ListingResponse>(json);
-
-            return response?.Results?.FirstOrDefault();
-        }
-        catch (Exception e)
-        {
-            // The api call can fail.
-            Logger.Log(e);
-            return null;
-        }
+        return await GetModInfoCyberstormInternal($"{ApiUrlWithAuthor(modTeam)}&q={Uri.EscapeDataString(modName)}&nsfw=true&deprecated=true", modName);
     }
 }
