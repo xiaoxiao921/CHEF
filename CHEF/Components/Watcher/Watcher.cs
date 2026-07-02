@@ -43,8 +43,6 @@ namespace CHEF.Components.Watcher
             {
                 try
                 {
-                    using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN")))
-                    {
                         if (await _spamFilter.Try(msg))
                         {
                             return;
@@ -69,7 +67,6 @@ namespace CHEF.Components.Watcher
                             await msg.Channel.SendMessageAsync(text: $"https://dontasktoask.com/", messageReference: new MessageReference(msg.Id));
                         }
                     }
-                }
                 catch (Exception e)
                 {
                     Logger.Log(e);

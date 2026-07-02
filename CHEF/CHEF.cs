@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CHEF.Components;
 using Discord;
 using Discord.WebSocket;
+using Sentry;
 
 namespace CHEF
 {
@@ -10,11 +11,15 @@ namespace CHEF
     {
         private DiscordSocketClient _client;
 
+        private IDisposable Sentry;
+
         public static void Main(string[] args)
             => new CHEF().MainAsync().GetAwaiter().GetResult();
 
         private async Task MainAsync()
         {
+            Sentry = SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN"));
+
             await SetupBotLogin();
 
             _client.Ready += InitOnClientReady;

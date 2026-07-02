@@ -19,11 +19,8 @@ namespace CHEF
             var fileName = Path.GetFileName(file);
             var log = $"{LogPrefix} [{fileName}:{line} {member}] {msg}";
 
-            using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN")))
-            {
                 Console.WriteLine(log);
                 SentrySdk.CaptureMessage(log);
             }
         }
     }
-}
