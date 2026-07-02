@@ -319,7 +319,7 @@ namespace CHEF.Components.Commands.Cooking
 
             var allStaticCmdAliases = CommandHandler.Service.Commands.SelectMany(cmdInfo => cmdInfo.Aliases).ToList();
             allStaticCmdAliases.AddRange(MultBotCommands);
-            if (allStaticCmdAliases.Any(alias => cmdName.StartsWith(alias, StringComparison.InvariantCultureIgnoreCase)))
+            if (allStaticCmdAliases.Contains(cmdName, StringComparer.InvariantCultureIgnoreCase))
             {
                 botAnswer.Clear();
                 botAnswer.AppendLine($"A static command called `{cmdName}` already exists, you can't have a recipe called the same as one of those.");
