@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Sentry;
 
@@ -16,14 +16,12 @@ namespace CHEF
             [CallerLineNumber] int line = 0
         )
         {
-            var fileName = Path.GetFileName(file);
-            var log = $"{LogPrefix} [{fileName}:{line} {member}] {msg}";
+            var parts = file.Replace('\\', '/').Split('/');
+            var location = string.Join("/", parts.Skip(Math.Max(0, parts.Length - 3)));
+            var log = $"{LogPrefix} [{location}:{line} {member}] {msg}";
 
-            using (SentrySdk.Init(Environment.GetEnvironmentVariable("SENTRY_DSN")))
-            {
-                Console.WriteLine(log);
-                SentrySdk.CaptureMessage(log);
-            }
+            Console.WriteLine(log);
+            SentrySdk.CaptureMessage(log);
         }
     }
 }
